@@ -1,3 +1,5 @@
+package trafficjava;
+
 import javafx.application.Platform;
 import javafx.scene.paint.Color;
 import javafx.scene.shape.Rectangle;
