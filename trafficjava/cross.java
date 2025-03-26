@@ -13,7 +13,12 @@ public class cross extends Group {
     private static int bredde = 40;
     int x;
     int y;
+    boolean opp;
+    boolean ned;
+    boolean høyre;
+    boolean venstre;
 
+    // todo- lag get metoder for boolean variabler
     /**
      * konsturktør for kryss
      * 
@@ -28,6 +33,10 @@ public class cross extends Group {
     public cross(int midtX, int midtY, boolean opp, boolean høyre, boolean ned, boolean venstre) {
         this.x = midtX;
         this.y = midtY;
+        this.opp = opp;
+        this.ned = ned;
+        this.høyre = høyre;
+        this.venstre = venstre;
         // varibler for roadmarkings
         int halvbredde = bredde / 2;
         int xtilvenstre = x - halvbredde;
