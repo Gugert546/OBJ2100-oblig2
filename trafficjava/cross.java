@@ -128,6 +128,25 @@ public class cross extends Group {
         return y;
     }
 
+    public void getDirections() {
+        String retninger = "";
+
+        if (opp == true) {
+            retninger = "kryss oppover";
+        }
+        if (ned == true) {
+            retninger = "kryss nedover";
+        }
+        if (venstre == true) {
+            retninger = "kryss venstre";
+        }
+        if (høyre == true) {
+            retninger = "kryss høyre";
+        }
+        System.out.println(retninger);
+
+    }
+
     /** metode for å sette bredden på veien/krysset */
     public void setBredde(int bredde) {
         cross.bredde = bredde;
