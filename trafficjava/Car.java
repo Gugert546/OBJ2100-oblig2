@@ -114,7 +114,22 @@ class Car implements Runnable {
     }
 
     public void moveCar() {
-
+        switch (direction) {
+            case UP:
+                y += -speed;
+                break;
+            case RIGHT:
+                x += speed;
+                break;
+            case DOWN:
+                y += speed;
+                break;
+            case LEFT:
+                x += -speed;
+                break;
+            default:
+                break;
+        }
     }
 
     public void updateUI() {
