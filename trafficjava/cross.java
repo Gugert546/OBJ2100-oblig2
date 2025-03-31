@@ -1,42 +1,47 @@
 package trafficjava;
 
+import java.util.Random;
+
+import javafx.application.Platform;
 import javafx.scene.Group;
 import javafx.scene.layout.Pane;
 import javafx.scene.paint.Color;
+import javafx.scene.shape.Circle;
 import javafx.scene.shape.Line;
 import javafx.scene.shape.Rectangle;
 
-public class cross extends Group {
+public class cross extends Group implements Runnable {
+
+    public enum Direction {
+        HØYRE, VENSTRE, OPP, NED
+    }
+
+    private Direction state;
 
     Pane gui = new Pane();
-    int lengde = 60;
+    int lengde = 40;
     private static int bredde = 40;
     int x;
     int y;
-    boolean opp;
-    boolean ned;
-    boolean høyre;
-    boolean venstre;
+    private int lysBredde = 20;
+    private int lysLengde = 25;
+    private int radius = 5;
+    private Circle sirkelopp;
+    private Circle sirkelhøyre;
+    private Circle sirkelvenstre;
+    private Circle sirkelned;
 
-    // todo- lag get metoder for boolean variabler
     /**
      * konsturktør for kryss
      * 
-     * @param x       start x posisjon, midt i krysset
-     * @param y       start y posisjon,midt i krysset
-     * @param opp     false/true for å ha med denne siden av krysset
-     * @param høyre   false/true for å ha med denne siden av krysset
-     * @param ned     false/true for å ha med denne siden av krysset
-     * @param venstre false/true for å ha med denne siden av krysset
-     * 
+     * @param x start x posisjon, midt i krysset
+     * @param y start y posisjon,midt i krysset
      */
-    public cross(int midtX, int midtY, boolean opp, boolean høyre, boolean ned, boolean venstre) {
+    public cross(int midtX, int midtY) {
         this.x = midtX;
         this.y = midtY;
-        this.opp = opp;
-        this.ned = ned;
-        this.høyre = høyre;
-        this.venstre = venstre;
+        this.state = Direction.HØYRE;
+
         // varibler for roadmarkings
         int halvbredde = bredde / 2;
         int xtilvenstre = x - halvbredde;
@@ -52,68 +57,106 @@ public class cross extends Group {
 
         // opp
         // x må stå -halvparten av bredden til venstre
-        if (opp == true) {
 
-            Rectangle roadR3 = new Rectangle(xtilvenstre, ylangtoppover, bredde, lengde);
-            roadR3.setFill(Color.GRAY);
-            getChildren().addAll(roadR3);
-            Line mopp = new Line(x, y, x, ylangtoppover);
-            mopp.getStrokeDashArray().addAll(11d);
-            mopp.setStroke(Color.YELLOW);
-            mopp.setStrokeWidth(bredde / 20);
-            getChildren().addAll(mopp);
+        Rectangle roadR3 = new Rectangle(xtilvenstre, ylangtoppover, bredde, lengde);
+        roadR3.setFill(Color.GRAY);
+        getChildren().addAll(roadR3);
+        Line mopp = new Line(x, y, x, ylangtoppover);
+        mopp.getStrokeDashArray().addAll(11d);
+        mopp.setStroke(Color.YELLOW);
+        mopp.setStrokeWidth(bredde / 20);
+        getChildren().addAll(mopp);
 
-            /*
-             * trafficLight.addLight()
-             */
-        }
+        // lys-opp
+        Group lysopp = new Group();
+        int lox = x - bredde / 2;
+        int loy = y - bredde;
+        int roy = loy - lysBredde / 2;
+        int rox = lox - lysLengde / 2;
+        Rectangle boksopp = new Rectangle(rox, roy, lysLengde, lysBredde);
+        boksopp.setFill(Color.BLACK);
+        lysopp.getChildren().addAll(boksopp);
+        sirkelopp = new Circle(lox, loy, radius);
+        sirkelopp.setFill(Color.WHITE);
+        lysopp.getChildren().addAll(sirkelopp);
+        getChildren().addAll(lysopp);
         // høyre
         // y må stå oppover
-        if (høyre == true) {
-            int endx = x + lengde;
-            Rectangle roadR1 = new Rectangle(x, yoppover, lengde, bredde);
-            roadR1.setFill(Color.GRAY);
-            getChildren().addAll(roadR1);
-            Line mhøyre = new Line(x, y, endx, y);
-            mhøyre.getStrokeDashArray().addAll(11d);
-            mhøyre.setStroke(Color.YELLOW);
-            mhøyre.setStrokeWidth(bredde / 20);
-            getChildren().addAll(mhøyre);
-            /*
-             * trafficLight.addLight()
-             */
-        }
+
+        int endx = x + lengde;
+        Rectangle roadR1 = new Rectangle(x, yoppover, lengde, bredde);
+        roadR1.setFill(Color.GRAY);
+        getChildren().addAll(roadR1);
+        Line mhøyre = new Line(x, y, endx, y);
+        mhøyre.getStrokeDashArray().addAll(11d);
+        mhøyre.setStroke(Color.YELLOW);
+        mhøyre.setStrokeWidth(bredde / 20);
+        getChildren().addAll(mhøyre);
+        // lys-høyre
+        Group lyshøyre = new Group();
+        int lhx = x + bredde;
+        int lhy = y - bredde / 2;
+        int rhy = lhy - lysLengde / 2;
+        int rhx = lhx - lysBredde / 2;
+        Rectangle bokshøyre = new Rectangle(rhx, rhy, lysBredde, lysLengde);
+        bokshøyre.setFill(Color.BLACK);
+        lyshøyre.getChildren().addAll(bokshøyre);
+        sirkelhøyre = new Circle(lhx, lhy, radius);
+        sirkelhøyre.setFill(Color.WHITE);
+        lyshøyre.getChildren().addAll(sirkelhøyre);
+        getChildren().addAll(lyshøyre);
+
         // ned
         // x må stå til venstre
-        if (ned == true) {
-            int endy = y + lengde;
-            Rectangle roadR4 = new Rectangle(xtilvenstre, y, bredde, lengde);
-            roadR4.setFill(Color.GRAY);
-            getChildren().addAll(roadR4);
-            Line mned = new Line(x, y, x, endy);
-            mned.getStrokeDashArray().addAll(11d);
-            mned.setStroke(Color.YELLOW);
-            mned.setStrokeWidth(bredde / 20);
-            getChildren().addAll(mned);
-            /*
-             * trafficLight.addLight()
-             */
-        }
+
+        int endy = y + lengde;
+        Rectangle roadR4 = new Rectangle(xtilvenstre, y, bredde, lengde);
+        roadR4.setFill(Color.GRAY);
+        getChildren().addAll(roadR4);
+        Line mned = new Line(x, y, x, endy);
+        mned.getStrokeDashArray().addAll(11d);
+        mned.setStroke(Color.YELLOW);
+        mned.setStrokeWidth(bredde / 20);
+        getChildren().addAll(mned);
+        // lys-ned
+        Group lysned = new Group();
+        int lnx = x + bredde / 2;
+        int lny = y + bredde;
+        int rny = lny - lysBredde / 2;
+        int rnx = lnx - lysLengde / 2;
+        Rectangle boksned = new Rectangle(rnx, rny, lysLengde, lysBredde);
+        boksned.setFill(Color.BLACK);
+        lysned.getChildren().addAll(boksned);
+        sirkelned = new Circle(lnx, lny, radius);
+        sirkelned.setFill(Color.WHITE);
+        lysned.getChildren().addAll(sirkelned);
+        getChildren().addAll(lysned);
+
         // venstre
         // x må stå langt il venstre og y oppover
-        if (venstre == true) {
-            Rectangle roadR2 = new Rectangle(xlangttilvenstre, yoppover, lengde, bredde);
-            roadR2.setFill(Color.GRAY);
-            getChildren().addAll(roadR2);
-            Line mvenstre = new Line(x, y, xlangttilvenstre, y);
-            mvenstre.getStrokeDashArray().addAll(11d);
-            mvenstre.setStroke(Color.YELLOW);
-            mvenstre.setStrokeWidth(bredde / 20);
-            getChildren().addAll(mvenstre);
-            /*
-             * trafficLight.addLight()
-             */
-        }
+
+        Rectangle roadR2 = new Rectangle(xlangttilvenstre, yoppover, lengde, bredde);
+        roadR2.setFill(Color.GRAY);
+        getChildren().addAll(roadR2);
+        Line mvenstre = new Line(x, y, xlangttilvenstre, y);
+        mvenstre.getStrokeDashArray().addAll(11d);
+        mvenstre.setStroke(Color.YELLOW);
+        mvenstre.setStrokeWidth(bredde / 20);
+        getChildren().addAll(mvenstre);
+        // lys-venstre
+        Group lysvenstre = new Group();
+        int lvx = x - bredde;
+        int lvy = y + bredde / 2;
+        int rvy = lvy - lysLengde / 2;
+        int rvx = lvx - lysBredde / 2;
+        Rectangle boksvenstre = new Rectangle(rvx, rvy, lysBredde, lysLengde);
+        boksvenstre.setFill(Color.BLACK);
+        lysvenstre.getChildren().addAll(boksvenstre);
+        sirkelvenstre = new Circle(lvx, lvy, radius);
+        sirkelvenstre.setFill(Color.WHITE);
+        lysvenstre.getChildren().addAll(sirkelvenstre);
+        getChildren().addAll(lysvenstre);
+        updateColor();
 
     }
 
@@ -126,25 +169,6 @@ public class cross extends Group {
     /** metode for å få y posisjonen til krysset(midt i) */
     public int getY() {
         return y;
-    }
-
-    public void getDirections() {
-        String retninger = "";
-
-        if (opp == true) {
-            retninger = "kryss oppover";
-        }
-        if (ned == true) {
-            retninger = "kryss nedover";
-        }
-        if (venstre == true) {
-            retninger = "kryss venstre";
-        }
-        if (høyre == true) {
-            retninger = "kryss høyre";
-        }
-        System.out.println(retninger);
-
     }
 
     /** metode for å sette bredden på veien/krysset */
@@ -165,5 +189,97 @@ public class cross extends Group {
     /** metode for å få lengden på veien i krysset */
     public int getLength() {
         return lengde;
+    }
+
+    /**
+     * metode for å få en tilfeldig ny retning
+     * 
+     * @param direction settes til retningen bilen kjører(Car.getDirection())
+     */
+    public int newDirection(int direction) {
+        int retning;
+        Random random = new Random();
+        do {
+            retning = random.nextInt(4) + 1;
+        } while (retning == direction);
+        return retning;
+
+    }
+
+    public void setState(Direction retning) {
+        this.state = retning;
+    }
+
+    private void høyre() {
+        sirkelhøyre.setFill(Color.GREEN);
+        sirkelned.setFill(Color.RED);
+        sirkelopp.setFill(Color.RED);
+        sirkelvenstre.setFill(Color.RED);
+    }
+
+    private void venstre() {
+        sirkelhøyre.setFill(Color.RED);
+        sirkelned.setFill(Color.RED);
+        sirkelopp.setFill(Color.RED);
+        sirkelvenstre.setFill(Color.GREEN);
+    }
+
+    private void opp() {
+        sirkelhøyre.setFill(Color.RED);
+        sirkelned.setFill(Color.RED);
+        sirkelopp.setFill(Color.GREEN);
+        sirkelvenstre.setFill(Color.RED);
+    }
+
+    private void ned() {
+        sirkelhøyre.setFill(Color.RED);
+        sirkelned.setFill(Color.GREEN);
+        sirkelopp.setFill(Color.RED);
+        sirkelvenstre.setFill(Color.RED);
+    }
+
+    private void updateColor() {
+        Platform.runLater(() -> {
+            switch (state) {
+                case HØYRE:
+                    høyre();
+                    break;
+                case VENSTRE:
+                    venstre();
+                    break;
+                case OPP:
+                    opp();
+                    break;
+                case NED:
+                    ned();
+                    break;
+
+                default:
+                    break;
+            }
+        });
+    }
+
+    @Override
+    public void run() {
+        while (true) {
+            try {
+                Thread.sleep(200);
+                setState(Direction.VENSTRE);
+                // legg til state GUL
+                Thread.sleep(200);
+                setState(Direction.OPP);
+                Thread.sleep(200);
+                setState(Direction.NED);
+                Thread.sleep(200);
+                setState(Direction.HØYRE);
+
+            } catch (InterruptedException e) {
+                Thread.currentThread().interrupt();
+                break;
+            }
+
+        }
+
     }
 }
