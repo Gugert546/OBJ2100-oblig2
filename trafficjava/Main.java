@@ -27,16 +27,45 @@ public class Main extends Application {
         // gui
         Rectangle guifelt = new Rectangle(600, 30, 200, 540);
         guifelt.setFill(Color.GRAY);
+        // ønsket fart på biler
+        Label Ftekst = new Label("ønsket fart på bilene");
+        TextField fart = new TextField();
+        Button Fknapp = new Button("OK");
+        Fknapp.setOnAction(e -> {
+            Integer speed = Integer.parseInt(fart.getText());
+            if (speed > 0) {
+                Car.setMaxSpeed(speed);
+            } else
+                System.out.println("ulovelig verdi for fart");
+        });
+        // ønsket tid på grønt lys
+        Label Ttekst = new Label("ønsket tid på grønt lys(millisec):");
+        TextField tid = new TextField();
+        Button Tknapp = new Button("OK");
+        Tknapp.setOnAction(e -> {
+            Integer GTI = Integer.parseInt(tid.getText());
+            if (GTI > 0) {
+                cross.setGTI(GTI);
+            } else
+                System.out.println("ulovlig verdi for tid");
+
+        });
+        // ønsket antall biler
         Label tekst = new Label("ønsket antall biler:");
         TextField bilAntall = new TextField();
         bilAntall.setPromptText("skriv ønsket antall biler");
         Button knapp = new Button("OK");
+        knapp.setOnAction(e -> {
+            Integer antallbil = Integer.parseInt(bilAntall.getText());
+
+        });
         // knapp.setOnAction(e
         VBox gui = new VBox(10);
-        gui.getChildren().addAll(tekst, bilAntall, knapp);
+        gui.getChildren().addAll(Ftekst, fart, Fknapp, Ttekst, tid, Tknapp, tekst, bilAntall, knapp);
         gui.setLayoutX(610);
-        gui.setLayoutY(400);
+        gui.setLayoutY(300);
         TrafficPane.getChildren().addAll(guifelt, gui);
+
         // bakgrunn
         TrafficPane.setStyle("-fx-background-color: lightgreen;");
         // oppbygning av vei system

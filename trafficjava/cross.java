@@ -19,7 +19,7 @@ public class cross extends Group implements Runnable {
     }
 
     private Direction state;
-
+    private static int GTI = 1000;
     Pane gui = new Pane();
     int lengde = 40;
     private static int bredde = 40;
@@ -68,7 +68,7 @@ public class cross extends Group implements Runnable {
         getChildren().addAll(box);
 
         // opp
-        // x må stå -halvparten av bredden til venstre
+        // x må stå -(halvparten av bredden) til venstre
 
         Rectangle roadR3 = new Rectangle(xtilvenstre, ylangtoppover, bredde, lengde);
         roadR3.setFill(Color.GRAY);
@@ -217,12 +217,13 @@ public class cross extends Group implements Runnable {
 
     }
 
+    /** metode for å sette state til lysene */
     public void setState(Direction retning) {
         this.state = retning;
         updateColor();
-        System.out.println("Setting state to: " + retning);
     }
 
+    /** metode for lys til høyre */
     private void høyre() {
 
         sirkelhøyre.setFill(Color.GREEN);
@@ -233,10 +234,10 @@ public class cross extends Group implements Runnable {
         sirkelopp.setEffect(rødtlys);
         sirkelvenstre.setFill(Color.RED);
         sirkelvenstre.setEffect(rødtlys);
-        System.out.println("Setting høyre to: grønn");
 
     }
 
+    /** metode for lys til venstre */
     private void venstre() {
 
         sirkelhøyre.setFill(Color.RED);
@@ -247,10 +248,10 @@ public class cross extends Group implements Runnable {
         sirkelopp.setEffect(rødtlys);
         sirkelvenstre.setFill(Color.GREEN);
         sirkelvenstre.setEffect(grøntlys);
-        System.out.println("Setting venstre to: grønn");
 
     }
 
+    /** metode for lys oppover */
     private void opp() {
 
         sirkelhøyre.setFill(Color.RED);
@@ -261,10 +262,10 @@ public class cross extends Group implements Runnable {
         sirkelopp.setEffect(grøntlys);
         sirkelvenstre.setFill(Color.RED);
         sirkelvenstre.setEffect(rødtlys);
-        System.out.println("Setting opp to: grønn");
 
     }
 
+    /** metode for lys ned */
     private void ned() {
 
         sirkelhøyre.setFill(Color.RED);
@@ -275,10 +276,10 @@ public class cross extends Group implements Runnable {
         sirkelopp.setEffect(rødtlys);
         sirkelvenstre.setFill(Color.RED);
         sirkelvenstre.setEffect(rødtlys);
-        System.out.println("Setting ned to: grønn");
 
     }
 
+    /** metode for å oppdatere lysene */
     private void updateColor() {
         Platform.runLater(() -> {
             switch (state) {
@@ -300,18 +301,27 @@ public class cross extends Group implements Runnable {
         });
     }
 
+    private void gul() {
+    }
+
+    public static void setGTI(int tid) {
+        cross.GTI = tid;
+        System.out.println("tid på grønt lys er:" + GTI);
+    }
+
+    /** run metode, bytter farge på lysene */
     @Override
     public void run() {
         while (true) {
             try {
-                Thread.sleep(2000);
+                Thread.sleep(GTI);
                 setState(Direction.VENSTRE);
                 // legg til state GUL
-                Thread.sleep(2000);
+                Thread.sleep(GTI);
                 setState(Direction.OPP);
-                Thread.sleep(2000);
+                Thread.sleep(GTI);
                 setState(Direction.NED);
-                Thread.sleep(2000);
+                Thread.sleep(GTI);
                 setState(Direction.HØYRE);
 
             } catch (InterruptedException e) {
