@@ -1,5 +1,6 @@
 package trafficjava;
 
+import java.util.List;
 import java.util.Random;
 
 import javafx.application.Platform;
@@ -34,6 +35,12 @@ public class cross extends Group implements Runnable {
     public Circle sirkelned;
     private Light.Distant greenlight = new Light.Distant();
     private Light.Distant redlight = new Light.Distant();
+
+    // findFrontCar
+    Car nearCarUP = null;
+    Car nearCarDWN = null;
+    Car nearCarLFT = null;
+    Car nearCarRIGHT = null;
 
     private Lighting grøntlys = new Lighting(greenlight);
     private Lighting rødtlys = new Lighting(redlight);
@@ -279,7 +286,47 @@ public class cross extends Group implements Runnable {
 
     }
 
-    /** metode for å oppdatere lysene */
+    public void findFrontCar(List<Car> bilListe) {
+        int HøyrelaneY = y - 5;
+        int VenstrelaneY = y + 5;
+        int OppLaneX = x - 5;
+        int NedLaneX = x + 5;
+
+        List<Car> cars = bilListe;
+        // går igjennom alle biler, finner den nærmeste i hver retning, lagres i
+        // variabler
+        // to-do
+        // hvordan gi beskjed til nærmeste bil om status til lyset
+        for (Car car : cars) {
+            // bil fra høyre ->
+            if (car.getDirection() == "RIGHT" && car.getY() == HøyrelaneY && car.getX() < x) {
+                // hvis bilen kjører til høyre OG bilens y pos er lik den til lanen OG bilens x
+                // posisjon er mindre en kryssets
+                if (nearCarRIGHT == null || Math.abs(car.getX() - x) < Math.abs(nearCarRIGHT.getX() - x)) {
+                    this.nearCarRIGHT = car;
+                }
+                // bil fra venstre
+                if (car.getDirection() == "LEFT" && car.getY() == VenstrelaneY && car.getX() > x) {
+                    if (nearCarLFT == null || Math.abs(car.getX() - x) > Math.abs(nearCarLFT.getX() - x)) {
+                        this.nearCarLFT = car;
+                    }
+                }
+                // bil ovenfra
+                if (car.getDirection() == "UP" && car.getX() == OppLaneX && car.getY() < y) {
+                    if (nearCarUP == null || Math.abs(car.getY() - y) < Math.abs(nearCarUP.getY() - y)) {
+                        this.nearCarUP = car;
+                    }
+                }
+                // bil nedenfra
+                if (car.getDirection() == "DOWN" && car.getX() == NedLaneX && car.getY() > y) {
+                    if (nearCarDWN == null || Math.abs(car.getY() - y) > Math.abs(nearCarDWN.getY() - y)) {
+                        this.nearCarDWN = car;
+                    }
+                }
+            }
+        }
+    }
+
     private void updateColor() {
         Platform.runLater(() -> {
             switch (state) {
@@ -304,6 +351,11 @@ public class cross extends Group implements Runnable {
     private void gul() {
     }
 
+    /**
+     * set tiden for grønt lys
+     * 
+     * @param tid antall millisekunder
+     */
     public static void setGTI(int tid) {
         cross.GTI = tid;
         System.out.println("tid på grønt lys er:" + GTI);
