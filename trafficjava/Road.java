@@ -9,7 +9,7 @@ import javafx.scene.shape.Line;
 import javafx.scene.shape.Rectangle;
 import javafx.scene.shape.Shape;
 
-public class Vei extends Group {
+public class Road extends Group {
 
     int bredde = Cross.getbredde();
 
@@ -18,7 +18,7 @@ public class Vei extends Group {
      * 
      * @param retning true for vertikal vei, false for horisontal vei
      */
-    public Vei(boolean retning, int x, int y, int length) {
+    public Road(boolean retning, int x, int y, int length) {
         /* vertikal vei */
         if (retning = true) {
             int startx = x - bredde / 2;

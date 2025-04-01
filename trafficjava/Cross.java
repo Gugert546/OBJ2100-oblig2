@@ -8,13 +8,13 @@ import javafx.scene.shape.Line;
 import javafx.scene.shape.Rectangle;
 import javafx.stage.Stage;
 
-public class cross extends Group {
+public class Cross extends Group {
 
     Pane gui = new Pane();
     int lengde = 120;
     private static int bredde = 80;
 
-    public cross(int x, int y, boolean opp, boolean høyre, boolean ned, boolean venstre) {
+    public Cross(int x, int y, boolean opp, boolean høyre, boolean ned, boolean venstre) {
 
         // varibler for roadmarkings
         int middlex = x;

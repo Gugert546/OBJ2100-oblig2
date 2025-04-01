@@ -20,8 +20,6 @@ class Car implements Runnable {
     public static final int CAR_WIDTH = 40;
     public static final int CAR_HEIGHT = 20;
 
-    private static List<Car> cars = new ArrayList<>();
-
     private final Rectangle shape;
     private Color color;
     private final double initialSpeed;
@@ -29,10 +27,10 @@ class Car implements Runnable {
     private double x;
     private double y;
     public Direction direction;
-    public double acceleration; 
-    
+    public double acceleration;
 
-    public Car(Color color, double initialSpeed, double x, double y, Direction direction) {
+    public Car(Color color, double x, double y, Direction direction) { 
+                                                                                            // 
         this.initialSpeed = initialSpeed;
         this.currentSpeed = initialSpeed;
         this.x = x;
@@ -54,7 +52,7 @@ class Car implements Runnable {
         return currentSpeed;
     }
 
-        public double getX() {
+    public double getX() {
         return x;
     }
 
@@ -75,39 +73,34 @@ class Car implements Runnable {
     }
 
     public void setSpeed() {
-        if (currentSpeed > 0) 
-            currentSpeed -= acceleration;
-        if  (currentSpeed < 0) 
-            currentSpeed = 0;
+
+            currentSpeed > 0) 
+           currentSpeed -= ac
+            (currentSpeed < 0
+        currentSpeed = 0;
             return;
 
         if (currentSpeed == 0)
             currentSpeed += acceleration;
-        if (currentSpeed == maxSpeed)
+        if (current
             return; 
     }
 
     public void setRandomColor() {
         Random random = new Random();
-        Color randomColor = Color.rgb(random.nextInt(256), random.nextInt(256), random.nextInt(256));
-    }
-
-
-    // Hvordan endre hastighet på acceleration eller deccelleration.
-     /* public void update() {
      
-    if (speed > 0) {
-            speed *= 0.85; // Reduce speed by 15% each update
-            if (speed < 0.1) speed = 0; // Stop completely when very slow
-        }
-        y += speed;
-    }
-
-    */
-    
-    // this.currentSpeed = speed;
 
     
+    / 
+     * vordan endre hastighet
+     * 
+     *  
+     * d > 0) {
+     * speed *= 0.85; // Reduce speed by 15% each update
+     *  
+     * }
+     *  
+     *
 
     public void setDirection(Direction direction) {
         this.direction = direction;
@@ -176,10 +169,6 @@ class Car implements Runnable {
             }
         }
 
-        return frontCar;
-    }
-
-
     private Cross findFrontCross() {
         List<Cross> kryss = Main.getList();
         Cross frontCross = null;
@@ -189,6 +178,3 @@ class Car implements Runnable {
 
         int nyRetning = frontCross.newDirection();
         }
-
-}
-
