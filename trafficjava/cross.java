@@ -4,6 +4,8 @@ import java.util.Random;
 
 import javafx.application.Platform;
 import javafx.scene.Group;
+import javafx.scene.effect.Light;
+import javafx.scene.effect.Lighting;
 import javafx.scene.layout.Pane;
 import javafx.scene.paint.Color;
 import javafx.scene.shape.Circle;
@@ -26,10 +28,15 @@ public class cross extends Group implements Runnable {
     private int lysBredde = 20;
     private int lysLengde = 25;
     private int radius = 5;
-    private Circle sirkelopp;
-    private Circle sirkelhøyre;
-    private Circle sirkelvenstre;
-    private Circle sirkelned;
+    public Circle sirkelopp;
+    public Circle sirkelhøyre;
+    public Circle sirkelvenstre;
+    public Circle sirkelned;
+    private Light.Distant greenlight = new Light.Distant();
+    private Light.Distant redlight = new Light.Distant();
+
+    private Lighting grøntlys = new Lighting(greenlight);
+    private Lighting rødtlys = new Lighting(redlight);
 
     /**
      * konsturktør for kryss
@@ -41,7 +48,12 @@ public class cross extends Group implements Runnable {
         this.x = midtX;
         this.y = midtY;
         this.state = Direction.HØYRE;
-
+        greenlight.setAzimuth(45);
+        greenlight.setElevation(60);
+        greenlight.setColor(Color.LIGHTGREEN);
+        redlight.setAzimuth(45);
+        redlight.setElevation(60);
+        redlight.setColor(Color.RED);
         // varibler for roadmarkings
         int halvbredde = bredde / 2;
         int xtilvenstre = x - halvbredde;
@@ -101,7 +113,7 @@ public class cross extends Group implements Runnable {
         Rectangle bokshøyre = new Rectangle(rhx, rhy, lysBredde, lysLengde);
         bokshøyre.setFill(Color.BLACK);
         lyshøyre.getChildren().addAll(bokshøyre);
-        sirkelhøyre = new Circle(lhx, lhy, radius);
+        this.sirkelhøyre = new Circle(lhx, lhy, radius);
         sirkelhøyre.setFill(Color.WHITE);
         lyshøyre.getChildren().addAll(sirkelhøyre);
         getChildren().addAll(lyshøyre);
@@ -156,7 +168,6 @@ public class cross extends Group implements Runnable {
         sirkelvenstre.setFill(Color.WHITE);
         lysvenstre.getChildren().addAll(sirkelvenstre);
         getChildren().addAll(lysvenstre);
-        updateColor();
 
     }
 
@@ -208,34 +219,64 @@ public class cross extends Group implements Runnable {
 
     public void setState(Direction retning) {
         this.state = retning;
+        updateColor();
+        System.out.println("Setting state to: " + retning);
     }
 
     private void høyre() {
+
         sirkelhøyre.setFill(Color.GREEN);
+        sirkelhøyre.setEffect(grøntlys);
         sirkelned.setFill(Color.RED);
+        sirkelned.setEffect(rødtlys);
         sirkelopp.setFill(Color.RED);
+        sirkelopp.setEffect(rødtlys);
         sirkelvenstre.setFill(Color.RED);
+        sirkelvenstre.setEffect(rødtlys);
+        System.out.println("Setting høyre to: grønn");
+
     }
 
     private void venstre() {
+
         sirkelhøyre.setFill(Color.RED);
+        sirkelhøyre.setEffect(rødtlys);
         sirkelned.setFill(Color.RED);
+        sirkelned.setEffect(rødtlys);
         sirkelopp.setFill(Color.RED);
+        sirkelopp.setEffect(rødtlys);
         sirkelvenstre.setFill(Color.GREEN);
+        sirkelvenstre.setEffect(grøntlys);
+        System.out.println("Setting venstre to: grønn");
+
     }
 
     private void opp() {
+
         sirkelhøyre.setFill(Color.RED);
+        sirkelhøyre.setEffect(rødtlys);
         sirkelned.setFill(Color.RED);
+        sirkelned.setEffect(rødtlys);
         sirkelopp.setFill(Color.GREEN);
+        sirkelopp.setEffect(grøntlys);
         sirkelvenstre.setFill(Color.RED);
+        sirkelvenstre.setEffect(rødtlys);
+        System.out.println("Setting opp to: grønn");
+
     }
 
     private void ned() {
+
         sirkelhøyre.setFill(Color.RED);
+        sirkelhøyre.setEffect(rødtlys);
         sirkelned.setFill(Color.GREEN);
+        sirkelned.setEffect(grøntlys);
         sirkelopp.setFill(Color.RED);
+        sirkelopp.setEffect(rødtlys);
         sirkelvenstre.setFill(Color.RED);
+        sirkelvenstre.setEffect(rødtlys);
+        System.out.println("Setting ned to: grønn");
+
     }
 
     private void updateColor() {
@@ -253,7 +294,6 @@ public class cross extends Group implements Runnable {
                 case NED:
                     ned();
                     break;
-
                 default:
                     break;
             }
@@ -264,14 +304,14 @@ public class cross extends Group implements Runnable {
     public void run() {
         while (true) {
             try {
-                Thread.sleep(200);
+                Thread.sleep(2000);
                 setState(Direction.VENSTRE);
                 // legg til state GUL
-                Thread.sleep(200);
+                Thread.sleep(2000);
                 setState(Direction.OPP);
-                Thread.sleep(200);
+                Thread.sleep(2000);
                 setState(Direction.NED);
-                Thread.sleep(200);
+                Thread.sleep(2000);
                 setState(Direction.HØYRE);
 
             } catch (InterruptedException e) {
