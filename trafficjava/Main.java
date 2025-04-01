@@ -37,7 +37,8 @@ public class Main extends Application {
         gui.setLayoutX(610);
         gui.setLayoutY(400);
         TrafficPane.getChildren().addAll(guifelt, gui);
-
+        // bakgrunn
+        TrafficPane.setStyle("-fx-background-color: lightgreen;");
         // oppbygning av vei system
         cross c0 = new cross(125, 150);// øverst til venstre
         // kryss.add(c0);
@@ -58,16 +59,21 @@ public class Main extends Application {
         vH.toBack();
         vT.toBack();
         vB.toBack();
+        Thread threadc0 = new Thread(c0);
+        threadc0.start();
+        Thread threadc1 = new Thread(c1);
+        threadc1.start();
+        Thread threadc2 = new Thread(c2);
+        threadc2.start();
+        Thread threadc3 = new Thread(c3);
+        threadc3.start();
 
         Scene trafficSim = new Scene(TrafficPane, 800, 600);
         primaryStage.setTitle("traffic sim");
         primaryStage.setScene(trafficSim);
         primaryStage.setResizable(false);
         primaryStage.show();
-        // spawne bil, må i ny thread
-        // bil bil1 = new bil();
 
-        // for(i=)
     }
 
     public static void main(String[] args) {
