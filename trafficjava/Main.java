@@ -25,8 +25,8 @@ import javafx.util.Duration;
 
 public class Main extends Application {
 
-    public static List<Car> cars = new ArrayList<>();
-    public static List<cross> kryss = new ArrayList<>();
+    public static List<Car> carList = new ArrayList<Car>();
+    public static List<Cross> crossList = new ArrayList<Cross>();
     private int CAR_COUNT = 6;
 
     public void start(Stage primaryStage) {
@@ -81,40 +81,34 @@ public class Main extends Application {
         // bakgrunn
         TrafficPane.setStyle("-fx-background-color: lightgreen;");
         // oppbygning av vei system
-        cross c0 = new cross(125, 150);// øverst til venstre
-        cross c1 = new cross(125, 450);// nederst til venstre
-        vei vV = new vei(true, c0.getX(), c0.getY(), c1.getY()); 
+        Cross c0 = new Cross(125, 150);// øverst til venstre
+        Cross c1 = new Cross(125, 450);// nederst til venstre
+        Road vV = new Road(true, c0.getX(), c0.getY(), c1.getY()); 
         vV.toBack();
 
-        cross c2 = new cross(500, 150);// øverst til høyre
-        cross c3 = new cross(500, 450);// nederst til høyre
-        vei vH = new vei(true, c2.getX(), c2.getY(), c3.getY());
+        Cross c2 = new Cross(500, 150);// øverst til høyre
+        Cross c3 = new Cross(500, 450);// nederst til høyre
+        Road vH = new Road(true, c2.getX(), c2.getY(), c3.getY());
         vH.toBack();
 
         TrafficPane.getChildren().addAll(c0, c1, c2, c3, vV, vH);
-        kryss.add(c0);
-        kryss.add(c1);
-        kryss.add(c2);
-        kryss.add(c3);
+        crossList.add(c0);
+        crossList.add(c1);
+        crossList.add(c2);
+        crossList.add(c3);
 
-        vei vT = new vei(false, c0.getX(), c0.getY(), c2.getX());
+        Road vT = new Road(false, c0.getX(), c0.getY(), c2.getX());
         vT.toBack();
-        vei vB = new vei(false, c1.getX(), c1.getY(), c3.getX());
+        Road vB = new Road(false, c1.getX(), c1.getY(), c3.getX());
         vB.toBack();
 
         TrafficPane.getChildren().addAll(vT, vB);
-        
-        
-        
-        
-
-       // Bil del
 
         Timeline carSpawner = new Timeline(new KeyFrame(Duration.seconds(4), event -> {
-            if (cars.size() >= CAR_COUNT) return; // Stop spawning if the limit is reached
+            if (carList.size() >= CAR_COUNT) return; // Stop spawning if the limit is reached
 
-                Car car = new Car(200, 100, LEFT); 
-                cars.add(car);
+                Car car = new Car(200, 100, Direction.LEFT); 
+                carList.add(car);
                 TrafficPane.getChildren().add(car);
 
         carSpawner.setCycleCount(Timeline.INDEFINITE); // Set limit for spawning
@@ -125,7 +119,6 @@ public class Main extends Application {
         primaryStage.setScene(trafficSim);
         primaryStage.setResizable(false);
         primaryStage.show();
-
     }
 
     public static void main(String[] args) {

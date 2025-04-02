@@ -3,13 +3,13 @@
     "javascript.format.enable": false,
     "java.project.referencedLibraries": [
         "lib/**/*.jar",
-        "c:\\Users\\jonas\\Desktop\\javafx-sdk-22\\lib\\javafx.base.jar",
-        "c:\\Users\\jonas\\Desktop\\javafx-sdk-22\\lib\\javafx.controls.jar",
-        "c:\\Users\\jonas\\Desktop\\javafx-sdk-22\\lib\\javafx.fxml.jar",
-        "c:\\Users\\jonas\\Desktop\\javafx-sdk-22\\lib\\javafx.graphics.jar",
-        "c:\\Users\\jonas\\Desktop\\javafx-sdk-22\\lib\\javafx.media.jar",
-        "c:\\Users\\jonas\\Desktop\\javafx-sdk-22\\lib\\javafx.swing.jar",
-        "c:\\Users\\jonas\\Desktop\\javafx-sdk-22\\lib\\javafx.web.jar",
-        "c:\\Users\\jonas\\Desktop\\javafx-sdk-22\\lib\\javafx-swt.jar"
+        "c:\\Program Files\\Java\\javafx-sdk-21.0.6\\lib\\javafx.base.jar",
+        "c:\\Program Files\\Java\\javafx-sdk-21.0.6\\lib\\javafx.controls.jar",
+        "c:\\Program Files\\Java\\javafx-sdk-21.0.6\\lib\\javafx.fxml.jar",
+        "c:\\Program Files\\Java\\javafx-sdk-21.0.6\\lib\\javafx.graphics.jar",
+        "c:\\Program Files\\Java\\javafx-sdk-21.0.6\\lib\\javafx.media.jar",
+        "c:\\Program Files\\Java\\javafx-sdk-21.0.6\\lib\\javafx.swing.jar",
+        "c:\\Program Files\\Java\\javafx-sdk-21.0.6\\lib\\javafx.web.jar",
+        "c:\\Program Files\\Java\\javafx-sdk-21.0.6\\lib\\javafx-swt.jar"
     ]
 }

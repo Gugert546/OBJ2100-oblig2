@@ -1,24 +1,22 @@
 package trafficjava;
 
 import javafx.scene.shape.Rectangle;
-
 import java.util.ArrayList;
 import java.util.List;
-
 import javafx.application.Platform;
 import javafx.scene.paint.Color;
-
 import java.util.Random;
 
-public double maxSpeed;
-
 class Car implements Runnable {
+    
     enum Direction {
         UP, RIGHT, DOWN, LEFT
     }
 
     public static final int CAR_WIDTH = 40;
     public static final int CAR_HEIGHT = 20;
+
+    public final double maxSpeed;
 
     private final Rectangle shape;
     private Color color;
@@ -30,14 +28,11 @@ class Car implements Runnable {
     public double acceleration;
 
     public Car(Color color, double x, double y, Direction direction) { 
-                                                                                            // 
-        this.initialSpeed = initialSpeed;
         this.currentSpeed = initialSpeed;
         this.x = x;
         this.y = y;
         this.direction = direction;
         this.shape = new Rectangle(CAR_WIDTH, CAR_HEIGHT, color);
-        this.acceleration = acceleration;
     }
 
     public Rectangle getShape() {
@@ -73,40 +68,24 @@ class Car implements Runnable {
     }
 
     public void setSpeed() {
+        if (currentSpeed > 0) {
+            currentSpeed -= acceleration;
+        } else if (currentSpeed < 0) {
 
-            currentSpeed > 0) 
-           currentSpeed -= ac
-            (currentSpeed < 0
-        currentSpeed = 0;
-            return;
+        } else if (currentSpeed == 0) {
 
-        if (currentSpeed == 0)
-            currentSpeed += acceleration;
-        if (current
-            return; 
+        }
     }
 
     public void setRandomColor() {
         Random random = new Random();
-     
-
-    
-    / 
-     * vordan endre hastighet
-     * 
-     *  
-     * d > 0) {
-     * speed *= 0.85; // Reduce speed by 15% each update
-     *  
-     * }
-     *  
-     *
+    }
 
     public void setDirection(Direction direction) {
         this.direction = direction;
     }
 
-    public void moveCar() {
+    public void moveCar(int speed) {
         switch (direction) {
             case UP:
                 y += -speed;
@@ -168,13 +147,5 @@ class Car implements Runnable {
                 }
             }
         }
-
-    private Cross findFrontCross() {
-        List<Cross> kryss = Main.getList();
-        Cross frontCross = null;
-        for (Cross cross : kryss) {
-            if ()
-        }
-
-        int nyRetning = frontCross.newDirection();
-        }
+    }
+}

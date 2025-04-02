@@ -9,44 +9,15 @@
             "name": "Main",
             "request": "launch",
             "mainClass": "trafficjava.Main",
-            "projectName": "OBJ2100-oblig2_6605a893"
+            "projectName": "OBJ2100-oblig2_1693877a"
         },
         {
             "type": "java",
             "name": "Main",
             "request": "launch",
-            "mainClass": "Main",
-            "projectName": "OBJ2100-oblig2_6605a893"
-        },
-        {
-            "type": "java",
-            "name": "JavaFXApp",
-            "request": "launch",
-            "mainClass": "trafficjava.JavaFXApp",
-            "projectName": "OBJ2100-oblig2_6605a893"
-        },
-        {
-            "type": "java",
-            "name": "JavaFXApp",
-            "request": "launch",
-            "mainClass": "bil.JavaFXApp",
-            "projectName": "Oblig 2_ad4ea4a7",
-            "vmArgs": "--module-path C:/Users/jonas/Desktop/javafx-sdk-22/lib --add-modules javafx.controls,javafx.fxml"
-        },
-        {
-            "type": "java",
-            "name": "main",
-            "request": "launch",
-            "mainClass": "bil.main",
-            "projectName": "Oblig 2_ad4ea4a7",
-            "vmArgs": "--module-path C:/Users/jonas/Desktop/javafx-sdk-22/lib --add-modules javafx.controls,javafx.fxml"
-        },
-        {
-            "type": "java",
-            "name": "Current File",
-            "request": "launch",
-            "mainClass": "${file}",
-            "vmArgs": "--module-path C:/Users/jonas/Desktop/javafx-sdk-22/lib --add-modules javafx.controls,javafx.fxml"
+            "mainClass": "trafficjava.Main",
+            "projectName": "OBJ2100-oblig2_6605a893",
+            "vmArgs": "--module-path C:\\Program Files\\Java\\javafx-sdk-21.0.6\\lib --add-modules javafx.controls,javafx.fxml"
         }
     ]
 }

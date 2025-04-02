@@ -13,19 +13,17 @@ import javafx.scene.shape.Circle;
 import javafx.scene.shape.Line;
 import javafx.scene.shape.Rectangle;
 
-public class cross extends Group implements Runnable {
-
+public class Cross extends Group implements Runnable {
     public enum Direction {
-        HØYRE, VENSTRE, OPP, NED
+        RIGHT, LEFT, UP, DOWN
     }
 
     private Direction state;
     private static int GTI = 1000;
     Pane gui = new Pane();
     int lengde = 40;
-    private static int bredde = 40;
-    int x;
-    int y;
+    private int width = 40;
+    int x, y;
     private int lysBredde = 20;
     private int lysLengde = 25;
     private int radius = 5;
@@ -51,10 +49,10 @@ public class cross extends Group implements Runnable {
      * @param x start x posisjon, midt i krysset
      * @param y start y posisjon,midt i krysset
      */
-    public cross(int midtX, int midtY) {
+    public Cross(int midtX, int midtY) {
         this.x = midtX;
         this.y = midtY;
-        this.state = Direction.HØYRE;
+        this.state = Direction.RIGHT;
         greenlight.setAzimuth(45);
         greenlight.setElevation(60);
         greenlight.setColor(Color.LIGHTGREEN);
@@ -62,34 +60,33 @@ public class cross extends Group implements Runnable {
         redlight.setElevation(60);
         redlight.setColor(Color.RED);
         // varibler for roadmarkings
-        int halvbredde = bredde / 2;
-        int xtilvenstre = x - halvbredde;
-        int yoppover = y - halvbredde;
+        int xtilvenstre = x - (width / 2);
+        int yoppover = y - (width / 2);
         int xlangttilvenstre = x - lengde;
         int ylangtoppover = y - lengde;
 
         // grå boks for å skjule midten
 
-        Rectangle box = new Rectangle(xtilvenstre, yoppover, bredde, bredde);
+        Rectangle box = new Rectangle(xtilvenstre, yoppover, width, width);
         box.setFill(Color.GRAY);
         getChildren().addAll(box);
 
         // opp
         // x må stå -(halvparten av bredden) til venstre
 
-        Rectangle roadR3 = new Rectangle(xtilvenstre, ylangtoppover, bredde, lengde);
+        Rectangle roadR3 = new Rectangle(xtilvenstre, ylangtoppover, width, lengde);
         roadR3.setFill(Color.GRAY);
         getChildren().addAll(roadR3);
         Line mopp = new Line(x, y, x, ylangtoppover);
         mopp.getStrokeDashArray().addAll(11d);
         mopp.setStroke(Color.YELLOW);
-        mopp.setStrokeWidth(bredde / 20);
+        mopp.setStrokeWidth(width / 20);
         getChildren().addAll(mopp);
 
         // lys-opp
         Group lysopp = new Group();
-        int lox = x - bredde / 2;
-        int loy = y - bredde;
+        int lox = x - width / 2;
+        int loy = y - width;
         int roy = loy - lysBredde / 2;
         int rox = lox - lysLengde / 2;
         Rectangle boksopp = new Rectangle(rox, roy, lysLengde, lysBredde);
@@ -103,18 +100,18 @@ public class cross extends Group implements Runnable {
         // y må stå oppover
 
         int endx = x + lengde;
-        Rectangle roadR1 = new Rectangle(x, yoppover, lengde, bredde);
+        Rectangle roadR1 = new Rectangle(x, yoppover, lengde, width);
         roadR1.setFill(Color.GRAY);
         getChildren().addAll(roadR1);
         Line mhøyre = new Line(x, y, endx, y);
         mhøyre.getStrokeDashArray().addAll(11d);
         mhøyre.setStroke(Color.YELLOW);
-        mhøyre.setStrokeWidth(bredde / 20);
+        mhøyre.setStrokeWidth(width / 20);
         getChildren().addAll(mhøyre);
         // lys-høyre
         Group lyshøyre = new Group();
-        int lhx = x + bredde;
-        int lhy = y - bredde / 2;
+        int lhx = x + width;
+        int lhy = y - width / 2;
         int rhy = lhy - lysLengde / 2;
         int rhx = lhx - lysBredde / 2;
         Rectangle bokshøyre = new Rectangle(rhx, rhy, lysBredde, lysLengde);
@@ -129,18 +126,18 @@ public class cross extends Group implements Runnable {
         // x må stå til venstre
 
         int endy = y + lengde;
-        Rectangle roadR4 = new Rectangle(xtilvenstre, y, bredde, lengde);
+        Rectangle roadR4 = new Rectangle(xtilvenstre, y, width, lengde);
         roadR4.setFill(Color.GRAY);
         getChildren().addAll(roadR4);
         Line mned = new Line(x, y, x, endy);
         mned.getStrokeDashArray().addAll(11d);
         mned.setStroke(Color.YELLOW);
-        mned.setStrokeWidth(bredde / 20);
+        mned.setStrokeWidth(width / 20);
         getChildren().addAll(mned);
         // lys-ned
         Group lysned = new Group();
-        int lnx = x + bredde / 2;
-        int lny = y + bredde;
+        int lnx = x + width / 2;
+        int lny = y + width;
         int rny = lny - lysBredde / 2;
         int rnx = lnx - lysLengde / 2;
         Rectangle boksned = new Rectangle(rnx, rny, lysLengde, lysBredde);
@@ -154,18 +151,18 @@ public class cross extends Group implements Runnable {
         // venstre
         // x må stå langt il venstre og y oppover
 
-        Rectangle roadR2 = new Rectangle(xlangttilvenstre, yoppover, lengde, bredde);
+        Rectangle roadR2 = new Rectangle(xlangttilvenstre, yoppover, lengde, width);
         roadR2.setFill(Color.GRAY);
         getChildren().addAll(roadR2);
         Line mvenstre = new Line(x, y, xlangttilvenstre, y);
         mvenstre.getStrokeDashArray().addAll(11d);
         mvenstre.setStroke(Color.YELLOW);
-        mvenstre.setStrokeWidth(bredde / 20);
+        mvenstre.setStrokeWidth(width / 20);
         getChildren().addAll(mvenstre);
         // lys-venstre
         Group lysvenstre = new Group();
-        int lvx = x - bredde;
-        int lvy = y + bredde / 2;
+        int lvx = x - width;
+        int lvy = y + width / 2;
         int rvy = lvy - lysLengde / 2;
         int rvx = lvx - lysBredde / 2;
         Rectangle boksvenstre = new Rectangle(rvx, rvy, lysBredde, lysLengde);
@@ -192,13 +189,13 @@ public class cross extends Group implements Runnable {
     }
 
     /** metode for å sette bredden på veien/krysset */
-    public void setBredde(int bredde) {
-        cross.bredde = bredde;
+    public void setWidth(int width) {
+        this.width = width;
     }
 
     /** metode for å få bredden på veien/veien i krysset */
-    public static int getbredde() {
-        return bredde;
+    public int getWidth() {
+        return width;
     }
 
     /** metode for å sette lengden på veien i krysset */
@@ -234,7 +231,6 @@ public class cross extends Group implements Runnable {
 
     /** metode for lys til høyre */
     private void høyre() {
-
         sirkelhøyre.setFill(Color.GREEN);
         sirkelhøyre.setEffect(grøntlys);
         sirkelned.setFill(Color.RED);
@@ -294,12 +290,11 @@ public class cross extends Group implements Runnable {
         int OppLaneX = x - 5;
         int NedLaneX = x + 5;
 
-        List<Car> cars = Main.cars;
         // går igjennom alle biler, finner den nærmeste i hver retning, lagres i
         // variabler
         // to-do
         // hvordan gi beskjed til nærmeste bil om status til lyset
-        for (Car car : cars) {
+        for (Car car : carList) {
             // bil fra høyre ->
             if (car.getDirection() == trafficjava.Car.Direction.RIGHT && car.getY() == HøyrelaneY && car.getX() < x) {
                 // hvis bilen kjører til høyre OG bilens y pos er lik den til lanen OG bilens x
@@ -333,16 +328,16 @@ public class cross extends Group implements Runnable {
     private void updateColor() {
         Platform.runLater(() -> {
             switch (state) {
-                case HØYRE:
+                case RIGHT:
                     høyre();
                     break;
-                case VENSTRE:
+                case LEFT:
                     venstre();
                     break;
-                case OPP:
+                case UP:
                     opp();
                     break;
-                case NED:
+                case DOWN:
                     ned();
                     break;
                 default:
@@ -352,6 +347,7 @@ public class cross extends Group implements Runnable {
     }
 
     private void gul() {
+        ;
     }
 
     /**
@@ -370,14 +366,14 @@ public class cross extends Group implements Runnable {
         while (true) {
             try {
                 Thread.sleep(GTI);
-                setState(Direction.VENSTRE);
+                setState(Direction.LEFT);
                 // legg til state GUL
                 Thread.sleep(GTI);
-                setState(Direction.OPP);
+                setState(Direction.UP);
                 Thread.sleep(GTI);
-                setState(Direction.NED);
+                setState(Direction.DOWN);
                 Thread.sleep(GTI);
-                setState(Direction.HØYRE);
+                setState(Direction.RIGHT);
 
             } catch (InterruptedException e) {
                 Thread.currentThread().interrupt();
@@ -385,6 +381,5 @@ public class cross extends Group implements Runnable {
             }
 
         }
-
     }
 }
