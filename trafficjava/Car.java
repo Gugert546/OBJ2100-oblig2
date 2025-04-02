@@ -1,14 +1,16 @@
 package trafficjava;
 
 import javafx.scene.shape.Rectangle;
-import java.util.ArrayList;
+
 import java.util.List;
 import javafx.application.Platform;
 import javafx.scene.paint.Color;
+import javafx.scene.paint.Paint;
+
 import java.util.Random;
 
-class Car implements Runnable {
-    
+class Car extends Rectangle implements Runnable {
+
     enum Direction {
         UP, RIGHT, DOWN, LEFT
     }
@@ -16,30 +18,35 @@ class Car implements Runnable {
     public static final int CAR_WIDTH = 40;
     public static final int CAR_HEIGHT = 20;
 
-    public final double maxSpeed;
+    public final int maxSpeed = 10;
 
     private final Rectangle shape;
-    private Color color;
-    private final double initialSpeed;
+    public Paint color;
+    // private final double initialSpeed;
     private double currentSpeed;
     private double x;
     private double y;
     public Direction direction;
     public double acceleration;
 
-    public Car(Color color, double x, double y, Direction direction) { 
-        this.currentSpeed = initialSpeed;
+    public Car(double x, double y, Direction direction) {
+        // this.currentSpeed = initialSpeed;
         this.x = x;
         this.y = y;
         this.direction = direction;
-        this.shape = new Rectangle(CAR_WIDTH, CAR_HEIGHT, color);
+        this.shape = new Rectangle(CAR_WIDTH, CAR_HEIGHT, Color.GOLD);
+        this.color = shape.getFill();
+        System.err.println("bilokject lagd med x" + x + "y" + y);
+        Thread car = new Thread(this);
+        car.start();
+
     }
 
     public Rectangle getShape() {
         return shape;
     }
 
-    public Color getColor() {
+    public Paint getColor() {
         return color;
     }
 
@@ -47,24 +54,8 @@ class Car implements Runnable {
         return currentSpeed;
     }
 
-    public double getX() {
-        return x;
-    }
-
-    public double getY() {
-        return y;
-    }
-
     public Direction getDirection() {
         return direction;
-    }
-
-    public void setX(double x) {
-        this.x = x;
-    }
-
-    public void setY(double y) {
-        this.y = y;
     }
 
     public void setSpeed() {
@@ -77,8 +68,10 @@ class Car implements Runnable {
         }
     }
 
-    public void setRandomColor() {
+    public Color setRandomColor() {
         Random random = new Random();
+        Color color = Color.rgb(random.nextInt(256), random.nextInt(256), random.nextInt(256));
+        return color;
     }
 
     public void setDirection(Direction direction) {
@@ -86,6 +79,7 @@ class Car implements Runnable {
     }
 
     public void moveCar(int speed) {
+        updateUI();
         switch (direction) {
             case UP:
                 y += -speed;
@@ -111,12 +105,19 @@ class Car implements Runnable {
 
     @Override
     public void run() {
+        try {
+            Thread.sleep(200);
+            moveCar(maxSpeed);
+
+        } catch (InterruptedException e) {
+            e.printStackTrace();
+        }
 
     }
 
     private Car findFrontCar() {
         Car frontCar = null;
-
+        List<Car> cars = Main.carList;
         for (Car car : cars) {
             // Bilen foran kan ikke være seg selv
             if (car == this) {
@@ -145,7 +146,10 @@ class Car implements Runnable {
                 if (frontCar == null || Math.abs(car.getY() - y) > Math.abs(frontCar.getY() - y)) {
                     frontCar = car;
                 }
+
             }
+
         }
+        return frontCar;
     }
 }

@@ -22,7 +22,7 @@ public class Cross extends Group implements Runnable {
     private static int GTI = 1000;
     Pane gui = new Pane();
     int lengde = 40;
-    private int width = 40;
+    private static int width = 40;
     int x, y;
     private int lysBredde = 20;
     private int lysLengde = 25;
@@ -189,12 +189,12 @@ public class Cross extends Group implements Runnable {
     }
 
     /** metode for å sette bredden på veien/krysset */
-    public void setWidth(int width) {
-        this.width = width;
+    public static void setWidth(int width) {
+        Cross.width = width;
     }
 
     /** metode for å få bredden på veien/veien i krysset */
-    public int getWidth() {
+    public static int getWidth() {
         return width;
     }
 
@@ -289,8 +289,7 @@ public class Cross extends Group implements Runnable {
         int VenstrelaneY = y + 5;
         int OppLaneX = x - 5;
         int NedLaneX = x + 5;
-
-        // går igjennom alle biler, finner den nærmeste i hver retning, lagres i
+        List<Car> carList = Main.carList; // går igjennom alle biler, finner den nærmeste i hver retning, lagres i
         // variabler
         // to-do
         // hvordan gi beskjed til nærmeste bil om status til lyset
@@ -356,7 +355,7 @@ public class Cross extends Group implements Runnable {
      * @param tid antall millisekunder
      */
     public static void setGTI(int tid) {
-        cross.GTI = tid;
+        Cross.GTI = tid;
         System.out.println("tid på grønt lys er:" + GTI);
     }
 

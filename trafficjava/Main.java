@@ -2,6 +2,7 @@ package trafficjava;
 
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Random;
 
 import javafx.animation.KeyFrame;
 import javafx.animation.Timeline;
@@ -10,7 +11,6 @@ import javafx.scene.Scene;
 import javafx.scene.control.Button;
 import javafx.scene.control.Label;
 import javafx.scene.control.TextField;
-import javafx.scene.layout.HBox;
 import javafx.scene.layout.Pane;
 import javafx.scene.layout.VBox;
 import javafx.scene.paint.Color;
@@ -28,9 +28,25 @@ public class Main extends Application {
     public static List<Car> carList = new ArrayList<Car>();
     public static List<Cross> crossList = new ArrayList<Cross>();
     private int CAR_COUNT = 6;
+    private double randomX = 0;
+    private double randomY = 0;
+    private Car.Direction randomDirection;
 
     public void start(Stage primaryStage) {
         Pane TrafficPane = new Pane();
+
+        Timeline carSpawner = new Timeline(new KeyFrame(Duration.seconds(4), event -> {
+            if (carList.size() >= CAR_COUNT)
+                return; // Stop spawning if the limit is reached
+            setTilfeldigSpawn();
+            Car car = new Car(randomX, randomY, randomDirection);
+            carList.add(car);
+            TrafficPane.getChildren().add(car);
+            car.toFront();
+            System.out.println("bil lagt til" + randomX + randomY + randomDirection + car.color);
+        }));
+        carSpawner.setCycleCount(Timeline.INDEFINITE); // Set limit for spawning
+        carSpawner.play(); // Start the spawning timeline
 
         // gui
         Rectangle guifelt = new Rectangle(600, 30, 200, 540);
@@ -55,7 +71,7 @@ public class Main extends Application {
         Tknapp.setOnAction(e -> {
             Integer GTI = Integer.parseInt(tid.getText());
             if (GTI > 0) {
-                cross.setGTI(GTI);
+                Cross.setGTI(GTI);
             } else
                 System.out.println("ulovlig verdi for tid");
 
@@ -68,10 +84,10 @@ public class Main extends Application {
         Button knapp = new Button("OK");
         knapp.setOnAction(e -> {
             Integer antallbil = Integer.parseInt(bilAntall.getText());
-
+            this.CAR_COUNT = antallbil;
         });
-        
-        //legger til gui elementer på skjermen
+
+        // legger til gui elementer på skjermen
         VBox gui = new VBox(10);
         gui.getChildren().addAll(Ftekst, fart, Fknapp, Ttekst, tid, Tknapp, tekst, bilAntall, knapp);
         gui.setLayoutX(610);
@@ -79,40 +95,31 @@ public class Main extends Application {
         TrafficPane.getChildren().addAll(guifelt, gui);
 
         // bakgrunn
-        TrafficPane.setStyle("-fx-background-color: lightgreen;");
+        /// TrafficPane.setStyle("-fx-background-color: lightgreen;");
         // oppbygning av vei system
         Cross c0 = new Cross(125, 150);// øverst til venstre
         Cross c1 = new Cross(125, 450);// nederst til venstre
-        Road vV = new Road(true, c0.getX(), c0.getY(), c1.getY()); 
-        vV.toBack();
+        Road vV = new Road(true, c0.getX(), c0.getY(), c1.getY());
 
         Cross c2 = new Cross(500, 150);// øverst til høyre
         Cross c3 = new Cross(500, 450);// nederst til høyre
         Road vH = new Road(true, c2.getX(), c2.getY(), c3.getY());
-        vH.toBack();
 
         TrafficPane.getChildren().addAll(c0, c1, c2, c3, vV, vH);
+        vV.toBack();
+        vH.toBack();
         crossList.add(c0);
         crossList.add(c1);
         crossList.add(c2);
         crossList.add(c3);
 
         Road vT = new Road(false, c0.getX(), c0.getY(), c2.getX());
-        vT.toBack();
+
         Road vB = new Road(false, c1.getX(), c1.getY(), c3.getX());
-        vB.toBack();
 
         TrafficPane.getChildren().addAll(vT, vB);
-
-        Timeline carSpawner = new Timeline(new KeyFrame(Duration.seconds(4), event -> {
-            if (carList.size() >= CAR_COUNT) return; // Stop spawning if the limit is reached
-
-                Car car = new Car(200, 100, Direction.LEFT); 
-                carList.add(car);
-                TrafficPane.getChildren().add(car);
-
-        carSpawner.setCycleCount(Timeline.INDEFINITE); // Set limit for spawning
-        carSpawner.play(); // Start the spawning timeline
+        vT.toBack();
+        vB.toBack();
 
         Scene trafficSim = new Scene(TrafficPane, 800, 600);
         primaryStage.setTitle("traffic sim");
@@ -126,4 +133,30 @@ public class Main extends Application {
 
     }
 
+    private void setTilfeldigSpawn() {
+        Random random = new Random();
+        int tall = random.nextInt(3) + 1;
+        switch (tall) {
+            case 1:
+                this.randomDirection = Car.Direction.DOWN;
+                this.randomX = 400;
+                this.randomY = 300;
+                break;
+            case 2:
+                this.randomDirection = Car.Direction.DOWN;
+                this.randomX = 400;
+                this.randomY = 300;
+                break;
+
+            case 3:
+                this.randomDirection = Car.Direction.RIGHT;
+                this.randomX = 400;
+                this.randomY = 300;
+                break;
+
+            default:
+                break;
+        }
+
+    }
 }
