@@ -3,49 +3,49 @@ package trafficjava;
 import java.util.List;
 import java.util.Random;
 
+import javafx.animation.KeyFrame;
+import javafx.animation.Timeline;
 import javafx.application.Platform;
 import javafx.scene.Group;
 import javafx.scene.effect.Light;
 import javafx.scene.effect.Lighting;
-import javafx.scene.layout.Pane;
 import javafx.scene.paint.Color;
 import javafx.scene.shape.Circle;
 import javafx.scene.shape.Line;
 import javafx.scene.shape.Rectangle;
+import javafx.util.Duration;
 
 public class Cross extends Group implements Runnable {
+
     public enum Direction {
         RIGHT, LEFT, UP, DOWN
     }
 
-    private Direction state;
-    private static int GTI = 1000;
-    Pane gui = new Pane();
-    private static int lengde = 80;
-    private static int width = 60;
-    int x, y;
-    private int lysBredde = 20;
-    private int lysLengde = 25;
-    private int radius = 5;
-    public Circle sirkelopp;
-    public Circle sirkelhøyre;
-    public Circle sirkelvenstre;
-    public Circle sirkelned;
+    // statiske variabler
+    private static int lengde = 80; // lengden på veiene i krysset
+    private static int width = 60; // bredden på veiene i krysset
+    public static int GTI = 1000; // tiden på lyset i millisekunder
+
+    private Direction state; // hvilken retning som har gult lys
+    private Direction lastState; // hvilken retning som hadde grønt sist-- kan brukes til gult lys
+
+    // lys-variabler
+    private int x, y; // x og y posisjonen til krysset
+    private int lysBredde = width / 3; // bredden på rektangelet rundt lysene
+    private int lysLengde = 25; // lengden på rektangelet rundt lysene
+    private int radius = 5; // radius på sirkelen som representerer lyset
+    public Circle sirkelopp, sirkelhøyre, sirkelvenstre, sirkelned; // sirkel objekt til kryssene
+    // lys i lampene
     private Light.Distant greenlight = new Light.Distant();
     private Light.Distant redlight = new Light.Distant();
+    private Lighting grøntlys = new Lighting(greenlight);
+    private Lighting rødtlys = new Lighting(redlight);
 
-    // findFrontCar
+    // findFrontCar variabler
     Car nearCarUP = null;
     Car nearCarDWN = null;
     Car nearCarLFT = null;
     Car nearCarRIGHT = null;
-    public int HøyrelaneY = y - 5;
-    public int VenstrelaneY = y + 5;
-    public int oppLaneX = x - 22;
-    public int nedLaneX = x + 5;
-
-    private Lighting grøntlys = new Lighting(greenlight);
-    private Lighting rødtlys = new Lighting(redlight);
 
     /**
      * konsturktør for kryss
@@ -204,7 +204,7 @@ public class Cross extends Group implements Runnable {
 
     /** metode for å sette lengden på veien i krysset */
     public void setLength(int lenght) {
-        this.lengde = lenght;
+        Cross.lengde = lenght;
     }
 
     /** metode for å få lengden på veien i krysset */
@@ -217,7 +217,7 @@ public class Cross extends Group implements Runnable {
      * 
      * @param direction settes til retningen bilen kjører(Car.getDirection())
      */
-    public int newDirection(int direction) {
+    public int randomDirection(int direction) {
         int retning;
         Random random = new Random();
         do {
@@ -229,6 +229,7 @@ public class Cross extends Group implements Runnable {
 
     /** metode for å sette state til lysene */
     public void setState(Direction retning) {
+        this.lastState = this.state;
         this.state = retning;
         updateColor();
     }
@@ -285,6 +286,27 @@ public class Cross extends Group implements Runnable {
         sirkelopp.setEffect(rødtlys);
         sirkelvenstre.setFill(Color.RED);
         sirkelvenstre.setEffect(rødtlys);
+    }
+
+    private void gul() {
+        switch (lastState) {
+            case RIGHT:
+
+                break;
+            case LEFT:
+                // TODO lag gult lys i javafx
+                // gult lys, resten rødt
+                break;
+            case UP:
+
+                break;
+            case DOWN:
+
+                break;
+
+            default:
+                break;
+        }
 
     }
 
@@ -292,35 +314,47 @@ public class Cross extends Group implements Runnable {
         List<Car> carList = Main.carList;
         for (Car car : carList) {
             // bil fra høyre ->
-            if (car.getDirection() == trafficjava.Car.Direction.RIGHT && car.getY() == HøyrelaneY && car.getX() < x) {
+            if (car.getDirection() == trafficjava.Car.Direction.RIGHT && car.getY() == Main.laneHøyreNede
+                    && car.getX() < x
+                    || car.getDirection() == trafficjava.Car.Direction.RIGHT && car.getY() == Main.laneHøyreOppe
+                            && car.getX() < x) {
                 // hvis bilen kjører til høyre OG bilens y pos er lik den til lanen OG bilens x
                 // posisjon er mindre en kryssets
                 if (nearCarRIGHT == null || Math.abs(car.getX() - x) < Math.abs(nearCarRIGHT.getX() - x)) {
                     this.nearCarRIGHT = car;
                 }
                 // bil fra venstre
-                if (car.getDirection() == trafficjava.Car.Direction.LEFT && car.getY() == VenstrelaneY
-                        && car.getX() > x) {
+                if (car.getDirection() == trafficjava.Car.Direction.LEFT && car.getY() == Main.laneVenstreNede
+                        && car.getX() > x
+                        || car.getDirection() == trafficjava.Car.Direction.LEFT && car.getY() == Main.laneVenstreOppe
+                                && car.getX() > x) {
                     if (nearCarLFT == null || Math.abs(car.getX() - x) > Math.abs(nearCarLFT.getX() - x)) {
                         this.nearCarLFT = car;
                     }
                 }
                 // bil ovenfra
-                if (car.getDirection() == trafficjava.Car.Direction.UP && car.getX() == oppLaneX && car.getY() < y) {
+                if (car.getDirection() == trafficjava.Car.Direction.UP && car.getX() == Main.laneOppoverHøyre
+                        && car.getY() < y
+                        || car.getDirection() == trafficjava.Car.Direction.UP && car.getX() == Main.laneOppoverVenstre
+                                && car.getY() < y) {
                     if (nearCarUP == null || Math.abs(car.getY() - y) < Math.abs(nearCarUP.getY() - y)) {
                         this.nearCarUP = car;
+                        if (nearCarUP != null)
+                            System.out.println("fant bil oppover");
                     }
                 }
                 // bil nedenfra
-                if (car.getDirection() == trafficjava.Car.Direction.DOWN && car.getX() == nedLaneX && car.getY() > y) {
+                if (car.getDirection() == trafficjava.Car.Direction.DOWN && car.getX() == Main.laneNedoverHøyre
+                        && car.getY() > y
+                        || car.getDirection() == trafficjava.Car.Direction.DOWN && car.getX() == Main.laneNedoverVenstre
+                                && car.getY() > y) {
                     if (nearCarDWN == null || Math.abs(car.getY() - y) > Math.abs(nearCarDWN.getY() - y)) {
                         this.nearCarDWN = car;
                     }
                 }
 
             }
-            if (nearCarUP != null)
-                System.out.println("fant bil oppover");
+
         }
     }
 
@@ -346,10 +380,6 @@ public class Cross extends Group implements Runnable {
         });
     }
 
-    private void gul() {
-        ;
-    }
-
     /**
      * set tiden for grønt lys
      * 
@@ -360,23 +390,51 @@ public class Cross extends Group implements Runnable {
         System.out.println("tid på grønt lys er:" + GTI);
     }
 
+    private void lyslogikk() {
+
+        // TODO, gi bilene beskjed om lysets state
+        if (nearCarLFT != null && state != Direction.LEFT) {
+            nearCarLFT.stoppAtLight(this);
+        }
+        if (nearCarDWN != null && state != Direction.DOWN) {
+            nearCarDWN.stoppAtLight(this);
+        }
+        if (nearCarUP != null && state != Direction.UP) {
+            nearCarUP.stoppAtLight(this);
+        }
+        if (nearCarRIGHT != null && state != Direction.RIGHT) {
+            nearCarRIGHT.stoppAtLight(this);
+        }
+        switch (state) {
+            case LEFT:
+                setState(Direction.UP);
+                break;
+            case RIGHT:
+                setState(Direction.DOWN);
+                break;
+            case UP:
+                setState(Direction.RIGHT);
+                break;
+            case DOWN:
+                setState(Direction.LEFT);
+                break;
+
+            default:
+                break;
+
+        }
+
+    }
+
     /** run metode, bytter farge på lysene */
     @Override
     public void run() {
         while (true) {
             try {
+                Thread.sleep(GTI);
                 findFrontCar();
-                Thread.sleep(GTI);
-                setState(Direction.LEFT);
-                // legg til state GUL
-                Thread.sleep(GTI);
-                setState(Direction.UP);
-                Thread.sleep(GTI);
-                setState(Direction.DOWN);
-                Thread.sleep(GTI);
-                setState(Direction.RIGHT);
+                lyslogikk();
 
-                break;
             } catch (Exception e) {
                 e.printStackTrace();
 

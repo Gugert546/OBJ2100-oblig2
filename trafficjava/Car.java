@@ -15,22 +15,28 @@ class Car extends Rectangle implements Runnable {
         UP, RIGHT, DOWN, LEFT
     }
 
-    public static final int CAR_WIDTH = 28;
+    enum Speed {
+        LOW, STOP, HIGH
+    }
+
+    public Speed speed;
+    public static final int CAR_WIDTH = 24;
     public static final int CAR_HEIGHT = 50;
 
-    public final int maxSpeed = 2;
+    public static int maxSpeed = 2;
 
     private Rectangle shape;
     public Paint color;
-    // private final double initialSpeed;
+
     private double currentSpeed;
     private double x;
     private double y;
     public Direction direction;
     public double acceleration;
+    // driving logic
+    private int hvorLangtRetning;
 
     public Car(double x, double y, Direction direction) {
-        // this.currentSpeed = initialSpeed;
         this.x = x;
         this.y = y;
         this.direction = direction;
@@ -56,17 +62,44 @@ class Car extends Rectangle implements Runnable {
         return currentSpeed;
     }
 
-    public Direction getDirection() {
-        return direction;
+    public int getintDirection() {
+        int intDirection = 0;
+        switch (direction) {
+            case UP:
+                intDirection = 3;
+                break;
+            case RIGHT:
+                intDirection = 1;
+                break;
+            case DOWN:
+                intDirection = 4;
+                break;
+            case LEFT:
+                intDirection = 2;
+                break;
+            default:
+                break;
+        }
+        return intDirection;
     }
 
-    public void setSpeed() {
-        if (currentSpeed > 0) {
-            currentSpeed -= acceleration;
-        } else if (currentSpeed < 0) {
+    public Direction getDirection() {
+        return this.direction;
+    }
 
-        } else if (currentSpeed == 0) {
-
+    public void setSpeed(Speed speed) {
+        switch (speed) {
+            case LOW:
+                moveCar(0.5);
+                break;
+            case HIGH:
+                moveCar(maxSpeed);
+                break;
+            case STOP:
+                moveCar(0);
+                break;
+            default:
+                break;
         }
     }
 
@@ -80,7 +113,7 @@ class Car extends Rectangle implements Runnable {
         this.direction = direction;
     }
 
-    public void moveCar(int speed) {
+    public void moveCar(double speed) {
 
         switch (direction) {
             case UP:
@@ -104,24 +137,77 @@ class Car extends Rectangle implements Runnable {
         }
     }
 
-    public void updateUI() {
-        Platform.runLater(() -> shape.setX(x));
-        Platform.runLater(() -> shape.setY(y));
+    public void outOfBoundsCheck() {
+
+        if (x > 600) {
+            Main.carList.remove(this);
+        }
+        if (x < 0) {
+            Main.carList.remove(this);
+        }
+        if (y > 800) {
+            Main.carList.remove(this);
+        }
+        if (y < 0) {
+            Main.carList.remove(this);
+        }
     }
 
-    @Override
-    public void run() {
-        while (true) {
-            try {
-                Thread.sleep(800);
-                moveCar(maxSpeed);
-                updateUI();
-
-            } catch (InterruptedException e) {
-                e.printStackTrace();
-            }
+    private void drivingLogic() {
+        outOfBoundsCheck();
+        Car frontcar = findFrontCar();
+        if (frontcar == null) {
+            setSpeed(Speed.HIGH);
         }
+        switch (hvorLangtRetning) {
+            case 1:// høyre retning frontcar x minus min x
+                if (frontcar.getX() - x < 75) {
+                    setSpeed(Speed.LOW);
+                }
+                if (frontcar.getX() - x < 55) {
+                    setSpeed(Speed.STOP);
+                }
+                if (frontcar.getX() - x >= 75) {
+                    setSpeed(Speed.HIGH);
+                }
+                break;
+            case 2:// vensre retning min x minus frontcar x
+                if (x - frontcar.getX() < 75) {
+                    setSpeed(Speed.LOW);
+                }
+                if (frontcar.getX() - x < 55) {
+                    setSpeed(Speed.STOP);
+                }
+                if (frontcar.getX() - x >= 75) {
+                    setSpeed(Speed.HIGH);
+                }
+                break;
+            case 3:// oppover retning min y minus frontcar y
+                if (y - frontcar.getY() < 75) {
+                    setSpeed(Speed.LOW);
+                }
+                if (y - frontcar.getY() < 55) {
+                    setSpeed(Speed.STOP);
+                }
+                if (y - frontcar.getY() >= 75) {
+                    setSpeed(Speed.HIGH);
+                }
+                break;
+            case 4:// nedover retning front car y minus min y
+                if (frontcar.getY() - y < 75) {
+                    setSpeed(Speed.LOW);
+                }
+                if (frontcar.getY() - y < 55) {
+                    setSpeed(Speed.STOP);
+                }
+                if (frontcar.getY() - y >= 75) {
+                    setSpeed(Speed.HIGH);
+                }
+                break;
 
+            default:
+                break;
+        }
     }
 
     private Car findFrontCar() {
@@ -136,29 +222,117 @@ class Car extends Rectangle implements Runnable {
             if (direction == Direction.RIGHT && car.getY() == y && car.getX() > x) {
                 if (frontCar == null || Math.abs(car.getX() - x) < Math.abs(frontCar.getX() - x)) {
                     frontCar = car;
+                    hvorLangtRetning = 1;
                 }
             }
 
             if (direction == Direction.LEFT && car.getY() == y && car.getX() < x) {
                 if (frontCar == null || Math.abs(car.getX() - x) > Math.abs(frontCar.getX() - x)) {
                     frontCar = car;
+                    hvorLangtRetning = 2;
                 }
             }
 
             if (direction == Direction.UP && car.getX() == x && car.getY() < y) {
                 if (frontCar == null || Math.abs(car.getY() - y) < Math.abs(frontCar.getY() - y)) {
                     frontCar = car;
+                    hvorLangtRetning = 3;
                 }
             }
 
             if (direction == Direction.DOWN && car.getX() == x && car.getY() > y) {
                 if (frontCar == null || Math.abs(car.getY() - y) > Math.abs(frontCar.getY() - y)) {
                     frontCar = car;
+                    hvorLangtRetning = 4;
                 }
 
             }
 
         }
+        if (frontCar != null) {
+            System.out.println("funnet nærmeste bil");
+        }
         return frontCar;
+
     }
+
+    public static void setMaxSpeed(Integer speed) {
+        Car.maxSpeed = speed;
+
+    }
+
+    public void updateUI() {
+        Platform.runLater(() -> shape.setX(x));
+        Platform.runLater(() -> shape.setY(y));
+    }
+
+    @Override
+    public void run() {
+        while (true) {
+            try {
+                Thread.sleep(100);
+                drivingLogic();
+                updateUI();
+
+            } catch (InterruptedException e) {
+                e.printStackTrace();
+            }
+        }
+
+    }
+
+    public void stoppAtLight(Cross cross) {
+
+        switch (hvorLangtRetning) {
+            case 1:// høyre retning frontcar x minus min x
+                if (cross.getX() - x < 75) {
+                    setSpeed(Speed.LOW);
+                }
+                if (cross.getX() - x < 55) {
+                    setSpeed(Speed.STOP);
+                }
+                if (cross.getX() - x >= 75) {
+                    setSpeed(Speed.HIGH);
+                }
+                break;
+            case 2:// vensre retning min x minus frontcar x
+                if (x - cross.getX() < 75) {
+                    setSpeed(Speed.LOW);
+                }
+                if (cross.getX() - x < 55) {
+                    setSpeed(Speed.STOP);
+                }
+                if (cross.getX() - x >= 75) {
+                    setSpeed(Speed.HIGH);
+                }
+                break;
+            case 3:// oppover retning min y minus frontcar y
+                if (y - cross.getY() < 75) {
+                    setSpeed(Speed.LOW);
+                }
+                if (y - cross.getY() < 55) {
+                    setSpeed(Speed.STOP);
+                }
+                if (y - cross.getY() >= 75) {
+                    setSpeed(Speed.HIGH);
+                }
+                break;
+            case 4:// nedover retning front car y minus min y
+                if (cross.getY() - y < 75) {
+                    setSpeed(Speed.LOW);
+                }
+                if (cross.getY() - y < 55) {
+                    setSpeed(Speed.STOP);
+                }
+                if (cross.getY() - y >= 75) {
+                    setSpeed(Speed.HIGH);
+                }
+                break;
+
+            default:
+                break;
+        }
+
+    }
+
 }
