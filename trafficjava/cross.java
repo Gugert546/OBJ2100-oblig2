@@ -176,6 +176,8 @@ public class cross extends Group implements Runnable {
         lysvenstre.getChildren().addAll(sirkelvenstre);
         getChildren().addAll(lysvenstre);
 
+        Thread cross = new Thread(this);
+        cross.start();
     }
 
     /** metode for å få x posisjonen til krysset(midt i) */
@@ -292,33 +294,34 @@ public class cross extends Group implements Runnable {
         int OppLaneX = x - 5;
         int NedLaneX = x + 5;
 
-        List<Car> cars = bilListe;
+        List<Car> cars = Main.cars;
         // går igjennom alle biler, finner den nærmeste i hver retning, lagres i
         // variabler
         // to-do
         // hvordan gi beskjed til nærmeste bil om status til lyset
         for (Car car : cars) {
             // bil fra høyre ->
-            if (car.getDirection() == "RIGHT" && car.getY() == HøyrelaneY && car.getX() < x) {
+            if (car.getDirection() == trafficjava.Car.Direction.RIGHT && car.getY() == HøyrelaneY && car.getX() < x) {
                 // hvis bilen kjører til høyre OG bilens y pos er lik den til lanen OG bilens x
                 // posisjon er mindre en kryssets
                 if (nearCarRIGHT == null || Math.abs(car.getX() - x) < Math.abs(nearCarRIGHT.getX() - x)) {
                     this.nearCarRIGHT = car;
                 }
                 // bil fra venstre
-                if (car.getDirection() == "LEFT" && car.getY() == VenstrelaneY && car.getX() > x) {
+                if (car.getDirection() == trafficjava.Car.Direction.LEFT && car.getY() == VenstrelaneY
+                        && car.getX() > x) {
                     if (nearCarLFT == null || Math.abs(car.getX() - x) > Math.abs(nearCarLFT.getX() - x)) {
                         this.nearCarLFT = car;
                     }
                 }
                 // bil ovenfra
-                if (car.getDirection() == "UP" && car.getX() == OppLaneX && car.getY() < y) {
+                if (car.getDirection() == trafficjava.Car.Direction.UP && car.getX() == OppLaneX && car.getY() < y) {
                     if (nearCarUP == null || Math.abs(car.getY() - y) < Math.abs(nearCarUP.getY() - y)) {
                         this.nearCarUP = car;
                     }
                 }
                 // bil nedenfra
-                if (car.getDirection() == "DOWN" && car.getX() == NedLaneX && car.getY() > y) {
+                if (car.getDirection() == trafficjava.Car.Direction.DOWN && car.getX() == NedLaneX && car.getY() > y) {
                     if (nearCarDWN == null || Math.abs(car.getY() - y) > Math.abs(nearCarDWN.getY() - y)) {
                         this.nearCarDWN = car;
                     }
