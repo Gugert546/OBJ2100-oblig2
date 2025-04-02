@@ -21,8 +21,8 @@ public class Cross extends Group implements Runnable {
     private Direction state;
     private static int GTI = 1000;
     Pane gui = new Pane();
-    int lengde = 40;
-    private static int width = 40;
+    private static int lengde = 80;
+    private static int width = 60;
     int x, y;
     private int lysBredde = 20;
     private int lysLengde = 25;
@@ -39,6 +39,10 @@ public class Cross extends Group implements Runnable {
     Car nearCarDWN = null;
     Car nearCarLFT = null;
     Car nearCarRIGHT = null;
+    public int HøyrelaneY = y - 5;
+    public int VenstrelaneY = y + 5;
+    public int oppLaneX = x - 22;
+    public int nedLaneX = x + 5;
 
     private Lighting grøntlys = new Lighting(greenlight);
     private Lighting rødtlys = new Lighting(redlight);
@@ -284,15 +288,8 @@ public class Cross extends Group implements Runnable {
 
     }
 
-    public void findFrontCar(List<Car> bilListe) {
-        int HøyrelaneY = y - 5;
-        int VenstrelaneY = y + 5;
-        int OppLaneX = x - 5;
-        int NedLaneX = x + 5;
-        List<Car> carList = Main.carList; // går igjennom alle biler, finner den nærmeste i hver retning, lagres i
-        // variabler
-        // to-do
-        // hvordan gi beskjed til nærmeste bil om status til lyset
+    public void findFrontCar() {
+        List<Car> carList = Main.carList;
         for (Car car : carList) {
             // bil fra høyre ->
             if (car.getDirection() == trafficjava.Car.Direction.RIGHT && car.getY() == HøyrelaneY && car.getX() < x) {
@@ -309,18 +306,21 @@ public class Cross extends Group implements Runnable {
                     }
                 }
                 // bil ovenfra
-                if (car.getDirection() == trafficjava.Car.Direction.UP && car.getX() == OppLaneX && car.getY() < y) {
+                if (car.getDirection() == trafficjava.Car.Direction.UP && car.getX() == oppLaneX && car.getY() < y) {
                     if (nearCarUP == null || Math.abs(car.getY() - y) < Math.abs(nearCarUP.getY() - y)) {
                         this.nearCarUP = car;
                     }
                 }
                 // bil nedenfra
-                if (car.getDirection() == trafficjava.Car.Direction.DOWN && car.getX() == NedLaneX && car.getY() > y) {
+                if (car.getDirection() == trafficjava.Car.Direction.DOWN && car.getX() == nedLaneX && car.getY() > y) {
                     if (nearCarDWN == null || Math.abs(car.getY() - y) > Math.abs(nearCarDWN.getY() - y)) {
                         this.nearCarDWN = car;
                     }
                 }
+
             }
+            if (nearCarUP != null)
+                System.out.println("fant bil oppover");
         }
     }
 
@@ -341,6 +341,7 @@ public class Cross extends Group implements Runnable {
                     break;
                 default:
                     break;
+
             }
         });
     }
@@ -364,6 +365,7 @@ public class Cross extends Group implements Runnable {
     public void run() {
         while (true) {
             try {
+                findFrontCar();
                 Thread.sleep(GTI);
                 setState(Direction.LEFT);
                 // legg til state GUL
@@ -374,9 +376,10 @@ public class Cross extends Group implements Runnable {
                 Thread.sleep(GTI);
                 setState(Direction.RIGHT);
 
-            } catch (InterruptedException e) {
-                Thread.currentThread().interrupt();
                 break;
+            } catch (Exception e) {
+                e.printStackTrace();
+
             }
 
         }

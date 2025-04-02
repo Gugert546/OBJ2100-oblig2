@@ -7,6 +7,7 @@ import java.util.Random;
 import javafx.animation.KeyFrame;
 import javafx.animation.Timeline;
 import javafx.application.Application;
+import javafx.application.Platform;
 import javafx.scene.Scene;
 import javafx.scene.control.Button;
 import javafx.scene.control.Label;
@@ -31,6 +32,8 @@ public class Main extends Application {
     private double randomX = 0;
     private double randomY = 0;
     private Car.Direction randomDirection;
+    public int laneNedover;
+    public int laneOppover = 153;
 
     public void start(Stage primaryStage) {
         Pane TrafficPane = new Pane();
@@ -41,9 +44,9 @@ public class Main extends Application {
             setTilfeldigSpawn();
             Car car = new Car(randomX, randomY, randomDirection);
             carList.add(car);
-            TrafficPane.getChildren().add(car);
+            TrafficPane.getChildren().add(car.getShape());
+
             car.toFront();
-            System.out.println("bil lagt til" + randomX + randomY + randomDirection + car.color);
         }));
         carSpawner.setCycleCount(Timeline.INDEFINITE); // Set limit for spawning
         carSpawner.play(); // Start the spawning timeline
@@ -91,21 +94,27 @@ public class Main extends Application {
         VBox gui = new VBox(10);
         gui.getChildren().addAll(Ftekst, fart, Fknapp, Ttekst, tid, Tknapp, tekst, bilAntall, knapp);
         gui.setLayoutX(610);
-        gui.setLayoutY(300);
+        gui.setLayoutY(200);
         TrafficPane.getChildren().addAll(guifelt, gui);
 
         // bakgrunn
         /// TrafficPane.setStyle("-fx-background-color: lightgreen;");
         // oppbygning av vei system
         Cross c0 = new Cross(125, 150);// øverst til venstre
+        laneNedover = c0.oppLaneX;
+        Road vO = new Road(true, c0.getX(), 0, c0.getY());
+
         Cross c1 = new Cross(125, 450);// nederst til venstre
         Road vV = new Road(true, c0.getX(), c0.getY(), c1.getY());
+        Road vvN = new Road(true, c1.getX(), c1.getY(), 600);
 
         Cross c2 = new Cross(500, 150);// øverst til høyre
+        Road vhO = new Road(true, c2.getX(), 0, c2.getY());
         Cross c3 = new Cross(500, 450);// nederst til høyre
+        Road vhN = new Road(true, c3.getX(), c3.getY(), 600);
         Road vH = new Road(true, c2.getX(), c2.getY(), c3.getY());
 
-        TrafficPane.getChildren().addAll(c0, c1, c2, c3, vV, vH);
+        TrafficPane.getChildren().addAll(c0, c1, c2, c3, vV, vH, vO, vhO, vhN, vvN);
         vV.toBack();
         vH.toBack();
         crossList.add(c0);
@@ -139,19 +148,19 @@ public class Main extends Application {
         switch (tall) {
             case 1:
                 this.randomDirection = Car.Direction.DOWN;
-                this.randomX = 400;
-                this.randomY = 300;
+                this.randomX = laneNedover;
+                this.randomY = 0;
                 break;
             case 2:
                 this.randomDirection = Car.Direction.DOWN;
-                this.randomX = 400;
-                this.randomY = 300;
+                this.randomX = 500;
+                this.randomY = 0;
                 break;
 
             case 3:
                 this.randomDirection = Car.Direction.RIGHT;
-                this.randomX = 400;
-                this.randomY = 300;
+                this.randomX = 0;
+                this.randomY = 450;
                 break;
 
             default:

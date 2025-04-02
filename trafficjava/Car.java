@@ -15,12 +15,12 @@ class Car extends Rectangle implements Runnable {
         UP, RIGHT, DOWN, LEFT
     }
 
-    public static final int CAR_WIDTH = 40;
-    public static final int CAR_HEIGHT = 20;
+    public static final int CAR_WIDTH = 28;
+    public static final int CAR_HEIGHT = 50;
 
-    public final int maxSpeed = 10;
+    public final int maxSpeed = 2;
 
-    private final Rectangle shape;
+    private Rectangle shape;
     public Paint color;
     // private final double initialSpeed;
     private double currentSpeed;
@@ -34,9 +34,11 @@ class Car extends Rectangle implements Runnable {
         this.x = x;
         this.y = y;
         this.direction = direction;
-        this.shape = new Rectangle(CAR_WIDTH, CAR_HEIGHT, Color.GOLD);
+        this.shape = new Rectangle(CAR_WIDTH, CAR_HEIGHT, setRandomColor());
         this.color = shape.getFill();
         System.err.println("bilokject lagd med x" + x + "y" + y);
+        this.shape.setX(x);
+        this.shape.setY(y);
         Thread car = new Thread(this);
         car.start();
 
@@ -79,19 +81,23 @@ class Car extends Rectangle implements Runnable {
     }
 
     public void moveCar(int speed) {
-        updateUI();
+
         switch (direction) {
             case UP:
                 y += -speed;
                 break;
             case RIGHT:
                 x += speed;
+                shape.setWidth(CAR_HEIGHT);
+                shape.setHeight(CAR_WIDTH);
                 break;
             case DOWN:
                 y += speed;
                 break;
             case LEFT:
                 x += -speed;
+                shape.setWidth(CAR_HEIGHT);
+                shape.setHeight(CAR_WIDTH);
                 break;
             default:
                 break;
@@ -105,12 +111,15 @@ class Car extends Rectangle implements Runnable {
 
     @Override
     public void run() {
-        try {
-            Thread.sleep(200);
-            moveCar(maxSpeed);
+        while (true) {
+            try {
+                Thread.sleep(800);
+                moveCar(maxSpeed);
+                updateUI();
 
-        } catch (InterruptedException e) {
-            e.printStackTrace();
+            } catch (InterruptedException e) {
+                e.printStackTrace();
+            }
         }
 
     }
