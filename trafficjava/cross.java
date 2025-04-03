@@ -323,20 +323,20 @@ public class Cross extends Group implements Runnable {
                 .filter(car -> {
                     switch (state) {
                         case RIGHT:
-                            return (Math.abs(car.y() - y) < 5 && car.x() < x) && // Left
-                                    (Math.abs(car.x() - x) < 5 && car.y() < y) && // Up
+                            return (Math.abs(car.y() - y) < 5 && car.x() < x) || // Left
+                                    (Math.abs(car.x() - x) < 5 && car.y() < y) || // Up
                                     (Math.abs(car.x() - x) < 5 && car.y() > y); // Down
                         case LEFT:
-                            return (Math.abs(car.x() - x) < 5 && car.y() > y) && // Down
-                                    (Math.abs(car.x() - x) < 5 && car.y() < y) && // Up
+                            return (Math.abs(car.x() - x) < 5 && car.y() > y) || // Down
+                                    (Math.abs(car.x() - x) < 5 && car.y() < y) || // Up
                                     (Math.abs(car.y() - y) < 5 && car.x() > x); // Right
                         case UP:
-                            return (Math.abs(car.y() - y) < 5 && car.x() < x) && // Left
-                                    (Math.abs(car.x() - x) < 5 && car.y() > y) && // Down
+                            return (Math.abs(car.y() - y) < 5 && car.x() < x) || // Left
+                                    (Math.abs(car.x() - x) < 5 && car.y() > y) || // Down
                                     (Math.abs(car.y() - y) < 5 && car.x() > x); // Right
                         case DOWN:
-                            return (Math.abs(car.y() - y) < 5 && car.x() < x) && // Left
-                                    (Math.abs(car.y() - y) < 5 && car.x() > x) && // Right
+                            return (Math.abs(car.y() - y) < 5 && car.x() < x) || // Left
+                                    (Math.abs(car.y() - y) < 5 && car.x() > x) || // Right
                                     (Math.abs(car.x() - x) < 5 && car.y() < y); // Up
                         default:
                             return false;

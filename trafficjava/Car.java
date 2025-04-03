@@ -176,7 +176,6 @@ class Car extends Rectangle implements Runnable {
                 setSpeed(Speed.HIGH);
         } else
             setSpeed(Speed.HIGH);
-
     }
 
     private Speed getSpeed() {
@@ -253,10 +252,10 @@ class Car extends Rectangle implements Runnable {
     public void stoppAtLight(Cross cross) {
         System.out.println("prøver å stoppe ved lys");
         double avstand = calculateDistance(cross, this);
-        if (avstand <= 20) {
+        if (avstand <= 90) {
             setSpeed(Speed.STOP);
         }
-        if (avstand >= 20 && avstand <= 50) {
+        if (avstand >= 91 && avstand <= 150) {
             setSpeed(Speed.LOW);
         } else
             setSpeed(Speed.HIGH);
