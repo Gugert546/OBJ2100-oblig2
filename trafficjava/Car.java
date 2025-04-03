@@ -364,10 +364,4 @@ class Car extends Rectangle implements Runnable {
 
     }
 
-    public void redLight(Cross cross) {
-
-        // TODO Auto-generated method stub
-        throw new UnsupportedOperationException("Unimplemented method 'redLight'");
-    }
-
 }
