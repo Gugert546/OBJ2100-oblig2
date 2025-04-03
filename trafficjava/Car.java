@@ -35,8 +35,10 @@ class Car extends Rectangle implements Runnable {
     private double y;
     public Direction direction;
     public double acceleration;
+    private boolean rødt;
 
     private int intRetning; // retningen som en int
+    private Cross closestCross;
 
     public Car(double x, double y, Direction direction) {
         this.x = x;
@@ -159,19 +161,31 @@ class Car extends Rectangle implements Runnable {
     }
 
     private double calculateDistance(Car car1, Car car2) {
-        return Math.sqrt(Math.pow(car1.x() - car2.y(), 2) +
-                Math.pow(car1.x() - car2.y(), 2));
+        return Math.sqrt(Math.pow(car1.x() - car2.x(), 2) +
+                Math.pow(car1.y() - car2.y(), 2));
     }
 
+    /** logikk for kjøring */
     private void drivingLogic() {
         outOfBoundsCheck();
         Car frontCar = findFrontCar();
-        if (frontCar != null) {
-            double avstand = calculateDistance(frontCar, this);
-            if (avstand < 20) {
+
+        if (rødt) {
+            double avstand = calculateDistance(closestCross, this);
+            if (avstand <= 80) {
                 setSpeed(Speed.STOP);
-            } else if (avstand >= 20 && avstand < 50) {
+            } else if (avstand >= 80 && avstand <= 110) {
                 setSpeed(Speed.LOW);
+            } else
+                setSpeed(Speed.HIGH);
+        } else if (frontCar != null) {
+            double avstand = calculateDistance(frontCar, this);
+            if (avstand < 50) {
+                setSpeed(Speed.STOP);
+                System.out.println("for nærme, stopper" + x() + y() + "   " + frontCar.x() + frontCar.y() + avstand);
+            } else if (avstand >= 50 && avstand < 75) {
+                setSpeed(Speed.LOW);
+                System.out.println("sakker ned farten" + x() + y());
             } else
                 setSpeed(Speed.HIGH);
         } else
@@ -190,6 +204,11 @@ class Car extends Rectangle implements Runnable {
         return y;
     }
 
+    /**
+     * finner bilen foran
+     * 
+     * @return Car nærmeste bil
+     */
     private Car findFrontCar() {
 
         return Main.carList.stream()
@@ -249,16 +268,19 @@ class Car extends Rectangle implements Runnable {
 
     }
 
-    public void stoppAtLight(Cross cross) {
-        System.out.println("prøver å stoppe ved lys");
-        double avstand = calculateDistance(cross, this);
-        if (avstand <= 90) {
-            setSpeed(Speed.STOP);
-        }
-        if (avstand >= 91 && avstand <= 150) {
-            setSpeed(Speed.LOW);
+    /**
+     * metode for å fortelle bilen at lyset er rødt
+     * 
+     * @param cross settes til krysset som har rødt lys
+     * @param rødt  boolean, settes til true hvis rødt
+     */
+    public void redLight(Cross cross, boolean rødt) {
+        this.rødt = rødt;
+        this.closestCross = cross;
+        if (rødt == true) {
+            System.out.println("car X:" + x() + "Y: " + y() + " har rødt lys");
         } else
-            setSpeed(Speed.HIGH);
+            System.out.println("car X:" + x() + "Y: " + y() + " har grønnt lys");
     }
 
     private Direction intTODirection(int intnyRetning) {
@@ -275,12 +297,6 @@ class Car extends Rectangle implements Runnable {
                 break;
         }
         return null;
-
-    }
-
-    public void greenLight(Cross cross) {
-        //
-        setSpeed(Speed.HIGH);
 
     }
 

@@ -28,7 +28,7 @@ public class Main extends Application {
 
     public static List<Car> carList = new ArrayList<Car>();
     public static List<Cross> crossList = new ArrayList<Cross>();
-    private int CAR_COUNT = 6;
+    private int CAR_COUNT = 2;
     private double randomX = 0;
     private double randomY = 0;
     private Car.Direction randomDirection;
@@ -43,7 +43,7 @@ public class Main extends Application {
     public static double laneVenstreNede = 450 - 23;
     // lanes i oppovergående retning
     public static double laneOppoverVenstre = 125 + 3;
-    public static double laneOppoverHøyre = 450 + 3;
+    public static double laneOppoverHøyre = 500 + 3;
 
     public void start(Stage primaryStage) {
         Pane TrafficPane = drawScreen();
@@ -116,13 +116,13 @@ public class Main extends Application {
                 break;
             case 8:
                 this.randomDirection = Car.Direction.UP;
-                this.randomX = 125;
-                this.randomY = laneOppoverHøyre;
+                this.randomX = laneOppoverVenstre;
+                this.randomY = 800;
                 break;
             case 9:
                 this.randomDirection = Car.Direction.UP;
-                this.randomX = 500;
-                this.randomY = laneOppoverHøyre;
+                this.randomX = laneOppoverHøyre;
+                this.randomY = 800;
 
             default:
                 break;

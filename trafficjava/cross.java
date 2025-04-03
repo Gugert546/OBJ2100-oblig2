@@ -17,7 +17,7 @@ import javafx.scene.shape.Line;
 import javafx.scene.shape.Rectangle;
 import javafx.util.Duration;
 
-public class Cross extends Group implements Runnable {
+public class Cross extends Group {
 
     public enum Direction {
         RIGHT, LEFT, UP, DOWN
@@ -26,10 +26,11 @@ public class Cross extends Group implements Runnable {
     // statiske variabler
     private static int lengde = 80; // lengden på veiene i krysset
     private static int width = 60; // bredden på veiene i krysset
-    public static int GTI = 1000; // tiden på lyset i millisekunder
+    public static long GTI = 2000; // tiden på lyset i millisekunder
 
     private Direction state; // hvilken retning som har grønnt lys
     private Direction lastState; // hvilken retning som hadde grønt sist-- kan brukes til gult lys
+    private Timeline lightSwitcher; // timeline for å bytte farge på lys
 
     // lys-variabler
     private int x, y; // x og y posisjonen til krysset
@@ -42,6 +43,8 @@ public class Cross extends Group implements Runnable {
     private Light.Distant redlight = new Light.Distant();
     private Lighting grøntlys = new Lighting(greenlight);
     private Lighting rødtlys = new Lighting(redlight);
+    private Car greenCar;
+    private List<Car> frontcar;
 
     /**
      * konsturktør for kryss
@@ -50,9 +53,11 @@ public class Cross extends Group implements Runnable {
      * @param y start y posisjon,midt i krysset
      */
     public Cross(int midtX, int midtY) {
+
         this.x = midtX;
         this.y = midtY;
-        this.state = Direction.RIGHT;
+        this.state = Direction.DOWN;
+        // this.state = randomState();
         greenlight.setAzimuth(45);
         greenlight.setElevation(60);
         greenlight.setColor(Color.LIGHTGREEN);
@@ -173,8 +178,12 @@ public class Cross extends Group implements Runnable {
         lysvenstre.getChildren().addAll(sirkelvenstre);
         getChildren().addAll(lysvenstre);
 
-        Thread cross = new Thread(this);
-        cross.start();
+        start();
+    }
+
+    private Direction randomState() {
+        // TODO gir en tilfeldig state til lysene som start, mer dynamisk program
+        throw new UnsupportedOperationException("Unimplemented method 'randomState'");
     }
 
     /** metode for å få x posisjonen til krysset(midt i) */
@@ -228,14 +237,35 @@ public class Cross extends Group implements Runnable {
         this.lastState = this.state;
         this.state = retning;
         updateColor();
-        List<Car> frontcar = findCarsRedLight();
-        if (frontcar != null) {
-            for (Car car : frontcar) {
-                car.stoppAtLight(this);
-            }
-        } else
-            System.out.println("ingel biler i lista");
+    }
 
+    private Car findgreenLightCar() {
+        return Main.carList.stream()
+                .filter(car -> {
+                    switch (state) {
+                        case RIGHT:
+                            return car.y() == y && car.getDirection() == trafficjava.Car.Direction.LEFT
+                                    && car.getX() < x;
+                        // Look for cars traveling left with the same y position
+                        case LEFT:
+                            return car.y() == y && car.getDirection() == trafficjava.Car.Direction.RIGHT
+                                    && car.getX() > x;
+                        // Look for cars traveling right with the same y position
+                        case UP:
+                            return car.x() == x && car.getDirection() == trafficjava.Car.Direction.DOWN
+                                    && car.getY() < y;
+                        // Look for cars traveling down with the same x position
+                        case DOWN:
+                            return car.x() == x && car.getDirection() == trafficjava.Car.Direction.UP && car.getY() > y;
+                        // Look for cars traveling up with the same x position
+                        default:
+                            return false;
+                    }
+
+                })
+                .sorted(Comparator.comparingDouble(car -> Car.calculateDistance(this, car))) // Sort by distance
+                .findFirst()
+                .orElse(null);
     }
 
     /** metode for lys til høyre */
@@ -317,27 +347,39 @@ public class Cross extends Group implements Runnable {
 
     }
 
+    /**
+     * finner de nærmeste bilene i alle retninger bortsett fra den med grønnt lys
+     * 
+     * @return List<Car> liste med tre bilobjekter
+     */
     public List<Car> findCarsRedLight() {
 
         return Main.carList.stream()
                 .filter(car -> {
                     switch (state) {
                         case RIGHT:
-                            return (Math.abs(car.y() - y) < 5 && car.x() < x) || // Left
-                                    (Math.abs(car.x() - x) < 5 && car.y() < y) || // Up
-                                    (Math.abs(car.x() - x) < 5 && car.y() > y); // Down
+                            // Exclude cars moving LEFT (state), include cars moving UP, DOWN, or RIGHT
+                            return (Math.abs(car.y() - y) < 5 && car.x() < x) ||
+                            // UP (cars moving towards the cross from the top)
+                                    (Math.abs(car.x() - x) < 5 && car.y() > y) ||
+                            // DOWN (cars moving towards the cross from the bottom)
+                                    (Math.abs(car.y() - y) < 5 && car.x() > x);
+                        // RIGHT (cars moving towards the cross from the right)
                         case LEFT:
-                            return (Math.abs(car.x() - x) < 5 && car.y() > y) || // Down
-                                    (Math.abs(car.x() - x) < 5 && car.y() < y) || // Up
-                                    (Math.abs(car.y() - y) < 5 && car.x() > x); // Right
+                            // Exclude cars moving LEFT (state), include cars moving UP, DOWN, or RIGHT
+                            return (Math.abs(car.x() - x) < 5 && car.y() > y) || // DOWN
+                                    (Math.abs(car.x() - x) < 5 && car.y() < y) || // UP
+                                    (Math.abs(car.y() - y) < 5 && car.x() > x); // RIGHT
                         case UP:
-                            return (Math.abs(car.y() - y) < 5 && car.x() < x) || // Left
-                                    (Math.abs(car.x() - x) < 5 && car.y() > y) || // Down
-                                    (Math.abs(car.y() - y) < 5 && car.x() > x); // Right
+                            // Exclude cars moving UP (state), include cars moving LEFT, RIGHT, or DOWN
+                            return (Math.abs(car.y() - y) < 5 && car.x() < x) || // LEFT
+                                    (Math.abs(car.x() - x) < 5 && car.y() > y) || // DOWN
+                                    (Math.abs(car.y() - y) < 5 && car.x() > x); // RIGHT
                         case DOWN:
-                            return (Math.abs(car.y() - y) < 5 && car.x() < x) || // Left
-                                    (Math.abs(car.y() - y) < 5 && car.x() > x) || // Right
-                                    (Math.abs(car.x() - x) < 5 && car.y() < y); // Up
+                            // Exclude cars moving DOWN (state), include cars moving LEFT, RIGHT, or UP
+                            return (Math.abs(car.y() - y) < 5 && car.x() < x) || // LEFT
+                                    (Math.abs(car.y() - y) < 5 && car.x() > x) || // RIGHT
+                                    (Math.abs(car.x() - x) < 5 && car.y() < y); // UP
                         default:
                             return false;
 
@@ -349,6 +391,7 @@ public class Cross extends Group implements Runnable {
 
     }
 
+    /** oppdater fargene til lysene på ui tråden */
     private void updateColor() {
         Platform.runLater(() -> {
             switch (state) {
@@ -376,34 +419,26 @@ public class Cross extends Group implements Runnable {
      * 
      * @param tid antall millisekunder
      */
-    public static void setGTI(int tid) {
+    public static void setGTI(long tid) {
         Cross.GTI = tid;
         System.out.println("tid på grønt lys er:" + GTI);
     }
 
+    /** metode med logikk for lysene, skal rulere hvilken retning som er grønn */
     private void lyslogikk() {
-
-        // TODO, gi bilene beskjed om lysets state
-
         switch (state) {
             case LEFT:
                 setState(Direction.UP);
                 break;
             case RIGHT:
                 setState(Direction.DOWN);
-
-                // System.out.println("ingen biler i krysset");
                 break;
             case UP:
                 setState(Direction.RIGHT);
-
-                // System.out.println("ingen biler i krysset");
                 break;
             case DOWN:
                 setState(Direction.LEFT);
-                // System.out.println("ingen biler i krysset");
                 break;
-
             default:
                 break;
 
@@ -411,19 +446,47 @@ public class Cross extends Group implements Runnable {
 
     }
 
-    /** run metode, bytter farge på lysene */
-    @Override
-    public void run() {
-        while (true) {
-            try {
-                Thread.sleep(GTI);
-                lyslogikk();
-
-            } catch (Exception e) {
-                e.printStackTrace();
-
+    /** oppdaterer lista over biler, sender også info til bilene om lysets status */
+    private void updateList() {
+        this.greenCar = findgreenLightCar();
+        this.frontcar = findCarsRedLight();
+        if (!frontcar.isEmpty()) {
+            for (Car car : frontcar) {
+                car.redLight(this, true);
             }
+        }
+        if (greenCar != null) {
+            greenCar.redLight(this, false);
 
         }
+    }
+
+    /** metode for å starte lysene */
+    private void startLys() {
+        Timeline lightSwitcher = new Timeline(new KeyFrame(Duration.millis(Cross.GTI), event -> lyslogikk()));
+        lightSwitcher.setCycleCount(Timeline.INDEFINITE);
+        lightSwitcher.play();
+    }
+
+    /**
+     * metode for å oppdatere hvor ofte noe skjer i timelinene, ikke fungerende enda
+     */
+    // Method to change GTI dynamically
+    public void updateGTI() {
+
+        // Stop the current timeline
+        lightSwitcher.stop();
+
+        // Update GTI and restart the timeline with the new interval
+        lightSwitcher.getKeyFrames().set(0, new KeyFrame(Duration.millis(GTI), event -> lyslogikk()));
+        lightSwitcher.play();
+    }
+
+    /** metode for å starte lysene, og updater som går hvert 100millis */
+    private void start() {
+        startLys();
+        Timeline updater = new Timeline(new KeyFrame(Duration.millis(100), event -> updateList()));
+        updater.setCycleCount(Timeline.INDEFINITE); // Runs forever
+        updater.play();
     }
 }
