@@ -1,7 +1,9 @@
 package trafficjava;
 
+import java.util.Comparator;
 import java.util.List;
 import java.util.Random;
+import java.util.stream.Collectors;
 
 import javafx.animation.KeyFrame;
 import javafx.animation.Timeline;
@@ -26,7 +28,7 @@ public class Cross extends Group implements Runnable {
     private static int width = 60; // bredden på veiene i krysset
     public static int GTI = 1000; // tiden på lyset i millisekunder
 
-    private Direction state; // hvilken retning som har gult lys
+    private Direction state; // hvilken retning som har grønnt lys
     private Direction lastState; // hvilken retning som hadde grønt sist-- kan brukes til gult lys
 
     // lys-variabler
@@ -40,12 +42,6 @@ public class Cross extends Group implements Runnable {
     private Light.Distant redlight = new Light.Distant();
     private Lighting grøntlys = new Lighting(greenlight);
     private Lighting rødtlys = new Lighting(redlight);
-
-    // findFrontCar variabler
-    Car nearCarUP = null;
-    Car nearCarDWN = null;
-    Car nearCarLFT = null;
-    Car nearCarRIGHT = null;
 
     /**
      * konsturktør for kryss
@@ -232,6 +228,14 @@ public class Cross extends Group implements Runnable {
         this.lastState = this.state;
         this.state = retning;
         updateColor();
+        List<Car> frontcar = findCarsRedLight();
+        if (frontcar != null) {
+            for (Car car : frontcar) {
+                car.stoppAtLight(this);
+            }
+        } else
+            System.out.println("ingel biler i lista");
+
     }
 
     /** metode for lys til høyre */
@@ -313,52 +317,36 @@ public class Cross extends Group implements Runnable {
 
     }
 
-    public void findFrontCar() {
-        List<Car> carList = Main.carList;
-        for (Car car : carList) {
-            // bil fra høyre ->
-            if (car.getDirection() == trafficjava.Car.Direction.RIGHT && car.getY() == Main.laneHøyreNede
-                    && car.getX() < x
-                    || car.getDirection() == trafficjava.Car.Direction.RIGHT && car.getY() == Main.laneHøyreOppe
-                            && car.getX() < x) {
-                // hvis bilen kjører til høyre OG bilens y pos er lik den til lanen OG bilens x
-                // posisjon er mindre en kryssets
-                if (nearCarRIGHT == null || Math.abs(car.getX() - x) < Math.abs(nearCarRIGHT.getX() - x)) {
-                    this.nearCarRIGHT = car;
-                }
-                // bil fra venstre
-                if (car.getDirection() == trafficjava.Car.Direction.LEFT && car.getY() == Main.laneVenstreNede
-                        && car.getX() > x
-                        || car.getDirection() == trafficjava.Car.Direction.LEFT && car.getY() == Main.laneVenstreOppe
-                                && car.getX() > x) {
-                    if (nearCarLFT == null || Math.abs(car.getX() - x) > Math.abs(nearCarLFT.getX() - x)) {
-                        this.nearCarLFT = car;
-                    }
-                }
-                // bil ovenfra
-                if (car.getDirection() == trafficjava.Car.Direction.UP && car.getX() == Main.laneOppoverHøyre
-                        && car.getY() < y
-                        || car.getDirection() == trafficjava.Car.Direction.UP && car.getX() == Main.laneOppoverVenstre
-                                && car.getY() < y) {
-                    if (nearCarUP == null || Math.abs(car.getY() - y) < Math.abs(nearCarUP.getY() - y)) {
-                        this.nearCarUP = car;
-                        if (nearCarUP != null)
-                            System.out.println("fant bil oppover");
-                    }
-                }
-                // bil nedenfra
-                if (car.getDirection() == trafficjava.Car.Direction.DOWN && car.getX() == Main.laneNedoverHøyre
-                        && car.getY() > y
-                        || car.getDirection() == trafficjava.Car.Direction.DOWN && car.getX() == Main.laneNedoverVenstre
-                                && car.getY() > y) {
-                    if (nearCarDWN == null || Math.abs(car.getY() - y) > Math.abs(nearCarDWN.getY() - y)) {
-                        this.nearCarDWN = car;
-                    }
-                }
+    public List<Car> findCarsRedLight() {
 
-            }
+        return Main.carList.stream()
+                .filter(car -> {
+                    switch (state) {
+                        case RIGHT:
+                            return (Math.abs(car.y() - y) < 5 && car.x() < x) && // Left
+                                    (Math.abs(car.x() - x) < 5 && car.y() < y) && // Up
+                                    (Math.abs(car.x() - x) < 5 && car.y() > y); // Down
+                        case LEFT:
+                            return (Math.abs(car.x() - x) < 5 && car.y() > y) && // Down
+                                    (Math.abs(car.x() - x) < 5 && car.y() < y) && // Up
+                                    (Math.abs(car.y() - y) < 5 && car.x() > x); // Right
+                        case UP:
+                            return (Math.abs(car.y() - y) < 5 && car.x() < x) && // Left
+                                    (Math.abs(car.x() - x) < 5 && car.y() > y) && // Down
+                                    (Math.abs(car.y() - y) < 5 && car.x() > x); // Right
+                        case DOWN:
+                            return (Math.abs(car.y() - y) < 5 && car.x() < x) && // Left
+                                    (Math.abs(car.y() - y) < 5 && car.x() > x) && // Right
+                                    (Math.abs(car.x() - x) < 5 && car.y() < y); // Up
+                        default:
+                            return false;
 
-        }
+                    }
+                })
+                .sorted(Comparator.comparingDouble(car -> Car.calculateDistance(this, car))) // Sort by distance
+                .limit(3) // Get the 3 closest cars
+                .collect(Collectors.toList()); // Collect into a list
+
     }
 
     private void updateColor() {
@@ -400,20 +388,20 @@ public class Cross extends Group implements Runnable {
         switch (state) {
             case LEFT:
                 setState(Direction.UP);
-                nearCarLFT.stoppAtLight(this);
-                nearCarRIGHT.stoppAtLight(this);
-                nearCarDWN.stoppAtLight(this);
-                nearCarUP.greenLight();
-
                 break;
             case RIGHT:
                 setState(Direction.DOWN);
+
+                // System.out.println("ingen biler i krysset");
                 break;
             case UP:
                 setState(Direction.RIGHT);
+
+                // System.out.println("ingen biler i krysset");
                 break;
             case DOWN:
                 setState(Direction.LEFT);
+                // System.out.println("ingen biler i krysset");
                 break;
 
             default:
@@ -429,7 +417,6 @@ public class Cross extends Group implements Runnable {
         while (true) {
             try {
                 Thread.sleep(GTI);
-                findFrontCar();
                 lyslogikk();
 
             } catch (Exception e) {

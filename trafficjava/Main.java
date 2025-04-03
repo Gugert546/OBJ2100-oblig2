@@ -33,27 +33,27 @@ public class Main extends Application {
     private double randomY = 0;
     private Car.Direction randomDirection;
     // lanes i nedovergående retning
-    public static int laneNedoverVenstre = 98;
-    public static int laneNedoverHøyre = 473;
+    public static double laneNedoverVenstre = 98;
+    public static double laneNedoverHøyre = 473;
     // lanes i høyregående retning
-    public static int laneHøyreNede = 453;
-    public static int laneHøyreOppe = 153;
+    public static double laneHøyreNede = 453;
+    public static double laneHøyreOppe = 153;
     // lanes i venstregående retning
-    public static int laneVenstreOppe = 150 - 23;
-    public static int laneVenstreNede = 450 - 23;
+    public static double laneVenstreOppe = 150 - 23;
+    public static double laneVenstreNede = 450 - 23;
     // lanes i oppovergående retning
-    public static int laneOppoverVenstre = 125 + 3;
-    public static int laneOppoverHøyre = 450 + 3;
+    public static double laneOppoverVenstre = 125 + 3;
+    public static double laneOppoverHøyre = 450 + 3;
 
     public void start(Stage primaryStage) {
         Pane TrafficPane = drawScreen();
 
-        Timeline carSpawner = new Timeline(new KeyFrame(Duration.seconds(4), event -> {
+        Timeline carSpawner = new Timeline(new KeyFrame(Duration.seconds(1), event -> {
             if (carList.size() >= CAR_COUNT)
                 return;
             setTilfeldigSpawn();
             Car car = new Car(randomX, randomY, randomDirection);
-            carList.add(car);
+            Main.carList.add(car);
             TrafficPane.getChildren().add(car.getShape());
             car.toFront();
             System.out.println(carList.size());
@@ -77,24 +77,52 @@ public class Main extends Application {
 
     private void setTilfeldigSpawn() {
         Random random = new Random();
-        int tall = random.nextInt(3) + 1;
+        int tall = random.nextInt(9) + 1;
         switch (tall) {
             case 1:
                 this.randomDirection = Car.Direction.DOWN;
-                this.randomX = 98;
+                this.randomX = laneNedoverVenstre;
                 this.randomY = 0;
                 break;
             case 2:
                 this.randomDirection = Car.Direction.DOWN;
-                this.randomX = 473;
+                this.randomX = laneNedoverHøyre;
                 this.randomY = 0;
                 break;
-
             case 3:
                 this.randomDirection = Car.Direction.RIGHT;
                 this.randomX = 0;
-                this.randomY = 453;
+                this.randomY = laneHøyreNede;
                 break;
+            case 4:
+                this.randomDirection = Car.Direction.RIGHT;
+                this.randomX = 0;
+                this.randomY = laneHøyreOppe;
+                break;
+            case 5:
+                this.randomDirection = Car.Direction.LEFT;
+                this.randomX = 600;
+                this.randomY = laneVenstreNede;
+                break;
+            case 6:
+                this.randomDirection = Car.Direction.LEFT;
+                this.randomX = 600;
+                this.randomY = laneVenstreOppe;
+                break;
+            case 7:
+                this.randomDirection = Car.Direction.LEFT;
+                this.randomX = 600;
+                this.randomY = laneVenstreNede;
+                break;
+            case 8:
+                this.randomDirection = Car.Direction.UP;
+                this.randomX = 125;
+                this.randomY = laneOppoverHøyre;
+                break;
+            case 9:
+                this.randomDirection = Car.Direction.UP;
+                this.randomX = 500;
+                this.randomY = laneOppoverHøyre;
 
             default:
                 break;
