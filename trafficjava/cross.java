@@ -208,7 +208,7 @@ public class Cross extends Group implements Runnable {
     }
 
     /** metode for å få lengden på veien i krysset */
-    public int getLength() {
+    public static int getLength() {
         return lengde;
     }
 
@@ -238,10 +238,13 @@ public class Cross extends Group implements Runnable {
     private void høyre() {
         sirkelhøyre.setFill(Color.GREEN);
         sirkelhøyre.setEffect(grøntlys);
+
         sirkelned.setFill(Color.RED);
         sirkelned.setEffect(rødtlys);
+
         sirkelopp.setFill(Color.RED);
         sirkelopp.setEffect(rødtlys);
+
         sirkelvenstre.setFill(Color.RED);
         sirkelvenstre.setEffect(rødtlys);
 
@@ -393,21 +396,15 @@ public class Cross extends Group implements Runnable {
     private void lyslogikk() {
 
         // TODO, gi bilene beskjed om lysets state
-        if (nearCarLFT != null && state != Direction.LEFT) {
-            nearCarLFT.stoppAtLight(this);
-        }
-        if (nearCarDWN != null && state != Direction.DOWN) {
-            nearCarDWN.stoppAtLight(this);
-        }
-        if (nearCarUP != null && state != Direction.UP) {
-            nearCarUP.stoppAtLight(this);
-        }
-        if (nearCarRIGHT != null && state != Direction.RIGHT) {
-            nearCarRIGHT.stoppAtLight(this);
-        }
+
         switch (state) {
             case LEFT:
                 setState(Direction.UP);
+                nearCarLFT.stoppAtLight(this);
+                nearCarRIGHT.stoppAtLight(this);
+                nearCarDWN.stoppAtLight(this);
+                nearCarUP.greenLight();
+
                 break;
             case RIGHT:
                 setState(Direction.DOWN);

@@ -33,8 +33,8 @@ class Car extends Rectangle implements Runnable {
     private double y;
     public Direction direction;
     public double acceleration;
-    // driving logic
-    private int hvorLangtRetning;
+
+    private int intRetning; // retningen som en int
 
     public Car(double x, double y, Direction direction) {
         this.x = x;
@@ -159,7 +159,7 @@ class Car extends Rectangle implements Runnable {
         if (frontcar == null) {
             setSpeed(Speed.HIGH);
         }
-        switch (hvorLangtRetning) {
+        switch (intRetning) {
             case 1:// høyre retning frontcar x minus min x
                 if (frontcar.getX() - x < 75) {
                     setSpeed(Speed.LOW);
@@ -222,28 +222,28 @@ class Car extends Rectangle implements Runnable {
             if (direction == Direction.RIGHT && car.getY() == y && car.getX() > x) {
                 if (frontCar == null || Math.abs(car.getX() - x) < Math.abs(frontCar.getX() - x)) {
                     frontCar = car;
-                    hvorLangtRetning = 1;
+                    intRetning = 1;
                 }
             }
 
             if (direction == Direction.LEFT && car.getY() == y && car.getX() < x) {
                 if (frontCar == null || Math.abs(car.getX() - x) > Math.abs(frontCar.getX() - x)) {
                     frontCar = car;
-                    hvorLangtRetning = 2;
+                    intRetning = 2;
                 }
             }
 
             if (direction == Direction.UP && car.getX() == x && car.getY() < y) {
                 if (frontCar == null || Math.abs(car.getY() - y) < Math.abs(frontCar.getY() - y)) {
                     frontCar = car;
-                    hvorLangtRetning = 3;
+                    intRetning = 3;
                 }
             }
 
             if (direction == Direction.DOWN && car.getX() == x && car.getY() > y) {
                 if (frontCar == null || Math.abs(car.getY() - y) > Math.abs(frontCar.getY() - y)) {
                     frontCar = car;
-                    hvorLangtRetning = 4;
+                    intRetning = 4;
                 }
 
             }
@@ -283,48 +283,48 @@ class Car extends Rectangle implements Runnable {
 
     public void stoppAtLight(Cross cross) {
 
-        switch (hvorLangtRetning) {
+        switch (intRetning) {
             case 1:// høyre retning frontcar x minus min x
-                if (cross.getX() - x < 75) {
+                if (cross.getX() - x < 90) {
                     setSpeed(Speed.LOW);
                 }
-                if (cross.getX() - x < 55) {
+                if (cross.getX() - x < Cross.getLength()) {
                     setSpeed(Speed.STOP);
                 }
-                if (cross.getX() - x >= 75) {
+                if (cross.getX() - x >= 90) {
                     setSpeed(Speed.HIGH);
                 }
                 break;
             case 2:// vensre retning min x minus frontcar x
-                if (x - cross.getX() < 75) {
+                if (x - cross.getX() < 90) {
                     setSpeed(Speed.LOW);
                 }
-                if (cross.getX() - x < 55) {
+                if (cross.getX() - x < Cross.getLength()) {
                     setSpeed(Speed.STOP);
                 }
-                if (cross.getX() - x >= 75) {
+                if (cross.getX() - x >= 90) {
                     setSpeed(Speed.HIGH);
                 }
                 break;
             case 3:// oppover retning min y minus frontcar y
-                if (y - cross.getY() < 75) {
+                if (y - cross.getY() < 90) {
                     setSpeed(Speed.LOW);
                 }
-                if (y - cross.getY() < 55) {
+                if (y - cross.getY() < Cross.getLength()) {
                     setSpeed(Speed.STOP);
                 }
-                if (y - cross.getY() >= 75) {
+                if (y - cross.getY() >= 90) {
                     setSpeed(Speed.HIGH);
                 }
                 break;
             case 4:// nedover retning front car y minus min y
-                if (cross.getY() - y < 75) {
+                if (cross.getY() - y < 90) {
                     setSpeed(Speed.LOW);
                 }
-                if (cross.getY() - y < 55) {
+                if (cross.getY() - y < Cross.getLength()) {
                     setSpeed(Speed.STOP);
                 }
-                if (cross.getY() - y >= 75) {
+                if (cross.getY() - y >= 90) {
                     setSpeed(Speed.HIGH);
                 }
                 break;
@@ -333,6 +333,41 @@ class Car extends Rectangle implements Runnable {
                 break;
         }
 
+    }
+
+    private Direction intTODirection(int intnyRetning) {
+        switch (intnyRetning) {
+            case 1:
+                return Direction.RIGHT;
+            case 2:
+                return Direction.LEFT;
+            case 3:
+                return Direction.UP;
+            case 4:
+                return Direction.RIGHT;
+            default:
+                break;
+        }
+        return null;
+
+    }
+
+    public void greenLight(Cross cross) {
+        //
+        setSpeed(Speed.HIGH);
+        switch (intRetning) {
+            case 1:// høyre retning frontcar x minus min x
+                if (cross.getX() - x == 0) {
+                    setDirection(intTODirection(cross.randomDirection(intRetning)));
+                }
+        }
+
+    }
+
+    public void redLight(Cross cross) {
+
+        // TODO Auto-generated method stub
+        throw new UnsupportedOperationException("Unimplemented method 'redLight'");
     }
 
 }
