@@ -9,6 +9,7 @@ import javafx.scene.paint.Color;
 import javafx.scene.paint.Paint;
 
 import java.util.Random;
+import java.util.concurrent.locks.ReentrantLock;
 import java.util.stream.Stream;
 
 class Car extends Rectangle implements Runnable {
@@ -24,6 +25,7 @@ class Car extends Rectangle implements Runnable {
     public Speed speed;
     public static final int CAR_WIDTH = 24;
     public static final int CAR_HEIGHT = 50;
+    private final ReentrantLock lock = new ReentrantLock();
 
     public static int maxSpeed = 2;
 
@@ -39,6 +41,7 @@ class Car extends Rectangle implements Runnable {
 
     private int intRetning; // retningen som en int
     private Cross closestCross;
+    private Cross currentIntersection;
 
     public Car(double x, double y, Direction direction) {
         this.x = x;
@@ -180,10 +183,10 @@ class Car extends Rectangle implements Runnable {
                 setSpeed(Speed.HIGH);
         } else if (frontCar != null) {
             double avstand = calculateDistance(frontCar, this);
-            if (avstand < 50) {
+            if (avstand < 60) {
                 setSpeed(Speed.STOP);
                 System.out.println("for nærme, stopper" + x() + y() + "   " + frontCar.x() + frontCar.y() + avstand);
-            } else if (avstand >= 50 && avstand < 75) {
+            } else if (avstand >= 60 && avstand < 85) {
                 setSpeed(Speed.LOW);
                 System.out.println("sakker ned farten" + x() + y());
             } else
@@ -305,4 +308,25 @@ class Car extends Rectangle implements Runnable {
                 Math.pow(cross.getX() - car.y(), 2));
     }
 
+    public void setCurrentIntersection(Cross cross) {
+        this.currentIntersection = cross;
+    }
+
+    public Cross getCurrentIntersection() {
+        return currentIntersection;
+    }
+
+    public boolean tryClaimIntersection(Cross intersection) {
+        if (lock.tryLock()) { // Try to acquire the lock without blocking
+            try {
+                if (currentIntersection == null || currentIntersection == intersection) {
+                    currentIntersection = intersection;
+                    return true; // Successfully claimed
+                }
+            } finally {
+                lock.unlock(); // Always unlock
+            }
+        }
+        return false; // Another intersection is controlling the car
+    }
 }

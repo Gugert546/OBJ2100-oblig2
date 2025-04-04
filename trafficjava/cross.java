@@ -27,7 +27,7 @@ public class Cross extends Group {
     // statiske variabler
     private static int lengde = 80; // lengden på veiene i krysset
     private static int width = 60; // bredden på veiene i krysset
-    public static long GTI = 4000; // tiden på lyset i millisekunder
+    public static long GTI = 100000; // tiden på lyset i millisekunder
 
     private Direction state; // hvilken retning som har grønnt lys
     private Direction lastState; // hvilken retning som hadde grønt sist-- kan brukes til gult lys
@@ -44,8 +44,10 @@ public class Cross extends Group {
     private Light.Distant redlight = new Light.Distant();
     private Lighting grøntlys = new Lighting(greenlight);
     private Lighting rødtlys = new Lighting(redlight);
-    private Car greenCar;
-    private List<Car> frontcar;
+    private Optional<Car> carFromLEFT;
+    private Optional<Car> carFromRIGHT;
+    private Optional<Car> carFromUP;
+    private Optional<Car> carFromDOWN;
 
     /**
      * konsturktør for kryss
@@ -57,7 +59,7 @@ public class Cross extends Group {
 
         this.x = midtX;
         this.y = midtY;
-        this.state = Direction.DOWN;
+        randomState();
         // this.state = randomState();
         greenlight.setAzimuth(45);
         greenlight.setElevation(60);
@@ -182,9 +184,25 @@ public class Cross extends Group {
         start();
     }
 
-    private Direction randomState() {
-        // TODO gir en tilfeldig state til lysene som start, mer dynamisk program
-        throw new UnsupportedOperationException("Unimplemented method 'randomState'");
+    /** setter en tilfeldig retning på lyset */
+    private void randomState() {
+        Random random = new Random();
+        int tall = random.nextInt(4) + 1;
+        switch (tall) {
+            case 1:
+                this.state = Direction.UP;
+                break;
+            case 2:
+                this.state = Direction.DOWN;
+                break;
+            case 3:
+                this.state = Direction.LEFT;
+                break;
+            case 4:
+                this.state = Direction.RIGHT;
+                break;
+
+        }
     }
 
     /** metode for å få x posisjonen til krysset(midt i) */
@@ -238,7 +256,112 @@ public class Cross extends Group {
         this.lastState = this.state;
         this.state = retning;
         updateColor();
+        switch (state) {
+            case RIGHT:// lyset på høyre side sett ovenfra
+                carFromLEFT.ifPresent(car -> {
+                    if (car.tryClaimIntersection(this)) {
+                        car.redLight(this, true); // Stop the car
+                    }
+                }); // stop cars from the left
+
+                carFromRIGHT.ifPresent(car -> {
+                    if (car.tryClaimIntersection(this)) {
+                        car.redLight(this, false); // Stop the car
+                    }
+                }); // allow cars from the right
+
+                carFromDOWN.ifPresent(car -> {
+                    if (car.tryClaimIntersection(this)) {
+                        car.redLight(this, true); // Stop the car
+                    }
+                }); // Stop cars from bottom
+                carFromUP.ifPresent(car -> {
+                    if (car.tryClaimIntersection(this)) {
+                        car.redLight(this, true); // Stop the car
+                    }
+                }); // stop cars from top
+                break;
+            case LEFT:// lyset på venstre side sett ovenfra
+                carFromLEFT.ifPresent(car -> {
+                    if (car.tryClaimIntersection(this)) {
+                        car.redLight(this, false); // Stop the car
+                    }
+                });// allow cars from the left
+                carFromRIGHT.ifPresent(car -> {
+                    if (car.tryClaimIntersection(this)) {
+                        car.redLight(this, true); // Stop the car
+                    }
+                }); // stop cars from the right
+                carFromDOWN.ifPresent(car -> {
+                    if (car.tryClaimIntersection(this)) {
+                        car.redLight(this, true); // Stop the car
+                    }
+                }); // Stop cars from bottom
+                carFromUP.ifPresent(car -> {
+                    if (car.tryClaimIntersection(this)) {
+                        car.redLight(this, true); // Stop the car
+                    }
+                }); // stop cars from top
+
+                break;
+            case DOWN:// lyset nede, sett ovefra
+                carFromLEFT.ifPresent(car -> {
+                    if (car.tryClaimIntersection(this)) {
+                        car.redLight(this, true); // Stop the car
+                    }
+                });// stop cars from the left
+
+                carFromRIGHT.ifPresent(car -> {
+                    if (car.tryClaimIntersection(this)) {
+                        car.redLight(this, true); // Stop the car
+                    }
+                }); // stop cars from the right
+
+                carFromDOWN.ifPresent(car -> {
+                    if (car.tryClaimIntersection(this)) {
+                        car.redLight(this, false); // Stop the car
+                    }
+                }); // allow cars from bottom
+
+                carFromUP.ifPresent(car -> {
+                    if (car.tryClaimIntersection(this)) {
+                        car.redLight(this, true); // Stop the car
+                    }
+                }); // stop cars from top
+                break;
+            case UP:// lyset opp, sett ovefra
+                carFromLEFT.ifPresent(car -> {
+                    if (car.tryClaimIntersection(this)) {
+                        car.redLight(this, true); // Stop the car
+                    }
+                }); // stop cars from the left
+
+                carFromRIGHT.ifPresent(car -> {
+                    if (car.tryClaimIntersection(this)) {
+                        car.redLight(this, true); // Stop the car
+                    }
+                }); // stop cars from the left
+
+                carFromDOWN.ifPresent(car -> {
+                    if (car.tryClaimIntersection(this)) {
+                        car.redLight(this, true); // Stop the car
+                    }
+                }); // stop cars from the left
+                carFromUP.ifPresent(car -> {
+                    if (car.tryClaimIntersection(this)) {
+                        car.redLight(this, false); // Stop the car
+                    }
+                }); // stop cars from the left
+
+                break;
+
+            default:
+                break;
+        }
     }
+
+
+    
 
     /** metode for lys til høyre */
     private void høyre() {
@@ -319,7 +442,7 @@ public class Cross extends Group {
 
     }
 
-    // TODO, kall metodene
+    /** finner biler som kommer fra venstre */
     public Optional<Car> carComingFromLeft() {
         return Main.carList.stream()
                 .filter(car -> Math.abs(car.y() - y) < 5 && car.x() < x
@@ -407,48 +530,18 @@ public class Cross extends Group {
 
     }
 
-    /** oppdaterer lista over biler, sender også info til bilene om lysets status */
+    /** oppdaterer lista over biler, sender også */
     private void updateList() {
-        Optional<Car> carFromLEFT = carComingFromLeft();
-        Optional<Car> carFromRIGHT = carComingFromRight();
-        Optional<Car> carFromUP = carComingFromTop();
-        Optional<Car> carFromDOWN = carComingFromBottom();
-        switch (state) {
-            case RIGHT:// lyset på høyre side sett ovenfra
-                carFromLEFT.ifPresent(car -> car.redLight(this, true));// stop cars from the left
-                carFromRIGHT.ifPresent(car -> car.redLight(this, false)); // allow cars from the right
-                carFromDOWN.ifPresent(car -> car.redLight(this, true)); // Stop cars from bottom
-                carFromUP.ifPresent(car -> car.redLight(this, true)); // stop cars from top
-                break;
-            case LEFT:// lyset på venstre side sett ovenfra
-                carFromLEFT.ifPresent(car -> car.redLight(this, false));// allow cars from the left
-                carFromRIGHT.ifPresent(car -> car.redLight(this, true)); // stop cars from the right
-                carFromDOWN.ifPresent(car -> car.redLight(this, true)); // Stop cars from bottom
-                carFromUP.ifPresent(car -> car.redLight(this, true)); // stop cars from top
-
-                break;
-            case DOWN:// lyset nede, sett ovefra
-                carFromLEFT.ifPresent(car -> car.redLight(this, true));// stop cars from the left
-                carFromRIGHT.ifPresent(car -> car.redLight(this, true)); // stop cars from the right
-                carFromDOWN.ifPresent(car -> car.redLight(this, false)); // allow cars from bottom
-                carFromUP.ifPresent(car -> car.redLight(this, true)); // stop cars from top
-                break;
-            case UP:// lyset opp, sett ovefra
-                carFromLEFT.ifPresent(car -> car.redLight(this, true));// stop cars from the left
-                carFromRIGHT.ifPresent(car -> car.redLight(this, true)); // stop cars from the right
-                carFromDOWN.ifPresent(car -> car.redLight(this, true)); // Stop cars from bottom
-                carFromUP.ifPresent(car -> car.redLight(this, false)); // Allow cars from top
-
-                break;
-
-            default:
-                break;
-        }
+        this.carFromLEFT = carComingFromLeft();
+        this.carFromRIGHT = carComingFromRight();
+        this.carFromUP = carComingFromTop();
+        this.carFromDOWN = carComingFromBottom();
 
     }
 
-    /** metode for å starte lysene */
     private void startLys() {
+        updateList();
+        lyslogikk();
         Timeline lightSwitcher = new Timeline(new KeyFrame(Duration.millis(Cross.GTI), event -> lyslogikk()));
         lightSwitcher.setCycleCount(Timeline.INDEFINITE);
         lightSwitcher.play();
