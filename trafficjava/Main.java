@@ -12,9 +12,11 @@ import javafx.scene.Scene;
 import javafx.scene.control.Button;
 import javafx.scene.control.Label;
 import javafx.scene.control.TextField;
+import javafx.scene.layout.HBox;
 import javafx.scene.layout.Pane;
 import javafx.scene.layout.VBox;
 import javafx.scene.paint.Color;
+import javafx.scene.paint.Paint;
 import javafx.scene.shape.Rectangle;
 import javafx.stage.Stage;
 import javafx.util.Duration;
@@ -25,7 +27,7 @@ import javafx.util.Duration;
 //nedbremsingshastighet avhenger av distansen mellom bil og kryss, må også ha en limit på minste avstand før bremsing
 
 public class Main extends Application {
-
+    private HBox biler = new HBox(10);
     public static List<Car> carList = new ArrayList<Car>();
     public static List<Cross> crossList = new ArrayList<Cross>();
     private int CAR_COUNT = 2;
@@ -45,8 +47,11 @@ public class Main extends Application {
     public static double laneOppoverVenstre = 125 + 3;
     public static double laneOppoverHøyre = 500 + 3;
 
+    // pane
+    Pane TrafficPane;
+
     public void start(Stage primaryStage) {
-        Pane TrafficPane = drawScreen();
+        this.TrafficPane = drawScreen();
 
         Timeline carSpawner = new Timeline(new KeyFrame(Duration.seconds(1), event -> {
             if (carList.size() >= CAR_COUNT)
@@ -174,8 +179,10 @@ public class Main extends Application {
         bilAntall.setPromptText("skriv ønsket antall biler");
         Button knapp = new Button("OK");
         knapp.setOnAction(e -> {
+            updateGUI();
             Integer antallbil = Integer.parseInt(bilAntall.getText());
             this.CAR_COUNT = antallbil;
+
         });
         gui.getChildren().addAll(tekst, bilAntall, knapp);
 
@@ -207,4 +214,26 @@ public class Main extends Application {
         vH.toBack();
         return pane;
     }
+
+    public void drawCarGui() {
+        biler.getChildren().removeAll();
+        for (Car car : carList) {
+            Rectangle bil = new Rectangle();
+            bil.setWidth(20);
+            bil.setHeight(40);
+            bil.setFill(car.getColor());
+            this.biler.getChildren().add(bil);
+        }
+        biler.setLayoutX(600);
+        biler.setLayoutY(450);
+        TrafficPane.getChildren().addAll(biler);
+    }
+
+    public void updateGUI() {
+        Platform.runLater(() -> {
+            drawCarGui();
+
+        });
+    }
+
 }

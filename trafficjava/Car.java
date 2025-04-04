@@ -174,7 +174,7 @@ class Car extends Rectangle implements Runnable {
             double avstand = calculateDistance(closestCross, this);
             if (avstand <= 80) {
                 setSpeed(Speed.STOP);
-            } else if (avstand >= 80 && avstand <= 110) {
+            } else if (avstand >= 80 && avstand <= 100) {
                 setSpeed(Speed.LOW);
             } else
                 setSpeed(Speed.HIGH);

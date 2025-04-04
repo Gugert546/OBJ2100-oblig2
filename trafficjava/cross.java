@@ -2,6 +2,7 @@ package trafficjava;
 
 import java.util.Comparator;
 import java.util.List;
+import java.util.Optional;
 import java.util.Random;
 import java.util.stream.Collectors;
 
@@ -26,7 +27,7 @@ public class Cross extends Group {
     // statiske variabler
     private static int lengde = 80; // lengden på veiene i krysset
     private static int width = 60; // bredden på veiene i krysset
-    public static long GTI = 2000; // tiden på lyset i millisekunder
+    public static long GTI = 4000; // tiden på lyset i millisekunder
 
     private Direction state; // hvilken retning som har grønnt lys
     private Direction lastState; // hvilken retning som hadde grønt sist-- kan brukes til gult lys
@@ -239,35 +240,6 @@ public class Cross extends Group {
         updateColor();
     }
 
-    private Car findgreenLightCar() {
-        return Main.carList.stream()
-                .filter(car -> {
-                    switch (state) {
-                        case RIGHT:
-                            return car.y() == y && car.getDirection() == trafficjava.Car.Direction.LEFT
-                                    && car.getX() < x;
-                        // Look for cars traveling left with the same y position
-                        case LEFT:
-                            return car.y() == y && car.getDirection() == trafficjava.Car.Direction.RIGHT
-                                    && car.getX() > x;
-                        // Look for cars traveling right with the same y position
-                        case UP:
-                            return car.x() == x && car.getDirection() == trafficjava.Car.Direction.DOWN
-                                    && car.getY() < y;
-                        // Look for cars traveling down with the same x position
-                        case DOWN:
-                            return car.x() == x && car.getDirection() == trafficjava.Car.Direction.UP && car.getY() > y;
-                        // Look for cars traveling up with the same x position
-                        default:
-                            return false;
-                    }
-
-                })
-                .sorted(Comparator.comparingDouble(car -> Car.calculateDistance(this, car))) // Sort by distance
-                .findFirst()
-                .orElse(null);
-    }
-
     /** metode for lys til høyre */
     private void høyre() {
         sirkelhøyre.setFill(Color.GREEN);
@@ -347,48 +319,37 @@ public class Cross extends Group {
 
     }
 
-    /**
-     * finner de nærmeste bilene i alle retninger bortsett fra den med grønnt lys
-     * 
-     * @return List<Car> liste med tre bilobjekter
-     */
-    public List<Car> findCarsRedLight() {
-
+    // TODO, kall metodene
+    public Optional<Car> carComingFromLeft() {
         return Main.carList.stream()
-                .filter(car -> {
-                    switch (state) {
-                        case RIGHT:
-                            // Exclude cars moving LEFT (state), include cars moving UP, DOWN, or RIGHT
-                            return (Math.abs(car.y() - y) < 5 && car.x() < x) ||
-                            // UP (cars moving towards the cross from the top)
-                                    (Math.abs(car.x() - x) < 5 && car.y() > y) ||
-                            // DOWN (cars moving towards the cross from the bottom)
-                                    (Math.abs(car.y() - y) < 5 && car.x() > x);
-                        // RIGHT (cars moving towards the cross from the right)
-                        case LEFT:
-                            // Exclude cars moving LEFT (state), include cars moving UP, DOWN, or RIGHT
-                            return (Math.abs(car.x() - x) < 5 && car.y() > y) || // DOWN
-                                    (Math.abs(car.x() - x) < 5 && car.y() < y) || // UP
-                                    (Math.abs(car.y() - y) < 5 && car.x() > x); // RIGHT
-                        case UP:
-                            // Exclude cars moving UP (state), include cars moving LEFT, RIGHT, or DOWN
-                            return (Math.abs(car.y() - y) < 5 && car.x() < x) || // LEFT
-                                    (Math.abs(car.x() - x) < 5 && car.y() > y) || // DOWN
-                                    (Math.abs(car.y() - y) < 5 && car.x() > x); // RIGHT
-                        case DOWN:
-                            // Exclude cars moving DOWN (state), include cars moving LEFT, RIGHT, or UP
-                            return (Math.abs(car.y() - y) < 5 && car.x() < x) || // LEFT
-                                    (Math.abs(car.y() - y) < 5 && car.x() > x) || // RIGHT
-                                    (Math.abs(car.x() - x) < 5 && car.y() < y); // UP
-                        default:
-                            return false;
+                .filter(car -> Math.abs(car.y() - y) < 5 && car.x() < x
+                        && car.getDirection() == trafficjava.Car.Direction.RIGHT) // Coming from left
+                .filter(car -> Car.calculateDistance(this, car) <= 100) // Within 100px
+                .min(Comparator.comparingDouble(car -> Car.calculateDistance(this, car))); // Closest car
+    }
 
-                    }
-                })
-                .sorted(Comparator.comparingDouble(car -> Car.calculateDistance(this, car))) // Sort by distance
-                .limit(3) // Get the 3 closest cars
-                .collect(Collectors.toList()); // Collect into a list
+    public Optional<Car> carComingFromRight() {
+        return Main.carList.stream()
+                .filter(car -> Math.abs(car.y() - y) < 30 && car.x() > x
+                        && car.getDirection() == trafficjava.Car.Direction.LEFT) // Coming from right
+                .filter(car -> Car.calculateDistance(this, car) <= 100) // Within 100px
+                .min(Comparator.comparingDouble(car -> Car.calculateDistance(this, car))); // Closest car
+    }
 
+    public Optional<Car> carComingFromTop() {
+        return Main.carList.stream()
+                .filter(car -> Math.abs(car.x() - x) < 30 && car.y() < y
+                        && car.getDirection() == trafficjava.Car.Direction.DOWN) // Coming from top
+                .filter(car -> Car.calculateDistance(this, car) <= 100) // Within 100px
+                .min(Comparator.comparingDouble(car -> Car.calculateDistance(this, car))); // Closest car
+    }
+
+    public Optional<Car> carComingFromBottom() {
+        return Main.carList.stream()
+                .filter(car -> Math.abs(car.x() - x) < 5 && car.y() > y
+                        && car.getDirection() == trafficjava.Car.Direction.UP) // Coming from bottom
+                .filter(car -> Car.calculateDistance(this, car) <= 100) // Within 100px
+                .min(Comparator.comparingDouble(car -> Car.calculateDistance(this, car))); // Closest car
     }
 
     /** oppdater fargene til lysene på ui tråden */
@@ -448,17 +409,42 @@ public class Cross extends Group {
 
     /** oppdaterer lista over biler, sender også info til bilene om lysets status */
     private void updateList() {
-        this.greenCar = findgreenLightCar();
-        this.frontcar = findCarsRedLight();
-        if (!frontcar.isEmpty()) {
-            for (Car car : frontcar) {
-                car.redLight(this, true);
-            }
-        }
-        if (greenCar != null) {
-            greenCar.redLight(this, false);
+        Optional<Car> carFromLEFT = carComingFromLeft();
+        Optional<Car> carFromRIGHT = carComingFromRight();
+        Optional<Car> carFromUP = carComingFromTop();
+        Optional<Car> carFromDOWN = carComingFromBottom();
+        switch (state) {
+            case RIGHT:// lyset på høyre side sett ovenfra
+                carFromLEFT.ifPresent(car -> car.redLight(this, true));// stop cars from the left
+                carFromRIGHT.ifPresent(car -> car.redLight(this, false)); // allow cars from the right
+                carFromDOWN.ifPresent(car -> car.redLight(this, true)); // Stop cars from bottom
+                carFromUP.ifPresent(car -> car.redLight(this, true)); // stop cars from top
+                break;
+            case LEFT:// lyset på venstre side sett ovenfra
+                carFromLEFT.ifPresent(car -> car.redLight(this, false));// allow cars from the left
+                carFromRIGHT.ifPresent(car -> car.redLight(this, true)); // stop cars from the right
+                carFromDOWN.ifPresent(car -> car.redLight(this, true)); // Stop cars from bottom
+                carFromUP.ifPresent(car -> car.redLight(this, true)); // stop cars from top
 
+                break;
+            case DOWN:// lyset nede, sett ovefra
+                carFromLEFT.ifPresent(car -> car.redLight(this, true));// stop cars from the left
+                carFromRIGHT.ifPresent(car -> car.redLight(this, true)); // stop cars from the right
+                carFromDOWN.ifPresent(car -> car.redLight(this, false)); // allow cars from bottom
+                carFromUP.ifPresent(car -> car.redLight(this, true)); // stop cars from top
+                break;
+            case UP:// lyset opp, sett ovefra
+                carFromLEFT.ifPresent(car -> car.redLight(this, true));// stop cars from the left
+                carFromRIGHT.ifPresent(car -> car.redLight(this, true)); // stop cars from the right
+                carFromDOWN.ifPresent(car -> car.redLight(this, true)); // Stop cars from bottom
+                carFromUP.ifPresent(car -> car.redLight(this, false)); // Allow cars from top
+
+                break;
+
+            default:
+                break;
         }
+
     }
 
     /** metode for å starte lysene */
