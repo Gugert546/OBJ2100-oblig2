@@ -4,13 +4,13 @@ import javafx.scene.shape.Rectangle;
 
 import java.util.Comparator;
 import java.util.List;
+
 import javafx.application.Platform;
 import javafx.scene.paint.Color;
 import javafx.scene.paint.Paint;
 
 import java.util.Random;
 import java.util.concurrent.locks.ReentrantLock;
-import java.util.stream.Stream;
 
 class Car extends Rectangle implements Runnable {
 
@@ -39,8 +39,6 @@ class Car extends Rectangle implements Runnable {
     public double acceleration;
     private boolean rødt;
 
-    private int intRetning; // retningen som en int
-    private Cross closestCross;
     private Cross currentIntersection;
 
     public Car(double x, double y, Direction direction) {
@@ -174,7 +172,7 @@ class Car extends Rectangle implements Runnable {
         Car frontCar = findFrontCar();
 
         if (rødt) {
-            double avstand = calculateDistance(closestCross, this);
+            double avstand = calculateDistance(currentIntersection, this);
             if (avstand <= 80) {
                 setSpeed(Speed.STOP);
             } else if (avstand >= 80 && avstand <= 100) {
@@ -279,28 +277,11 @@ class Car extends Rectangle implements Runnable {
      */
     public void redLight(Cross cross, boolean rødt) {
         this.rødt = rødt;
-        this.closestCross = cross;
+        setCurrentIntersection(cross);
         if (rødt == true) {
             System.out.println("car X:" + x() + "Y: " + y() + " har rødt lys");
         } else
             System.out.println("car X:" + x() + "Y: " + y() + " har grønnt lys");
-    }
-
-    private Direction intTODirection(int intnyRetning) {
-        switch (intnyRetning) {
-            case 1:
-                return Direction.RIGHT;
-            case 2:
-                return Direction.LEFT;
-            case 3:
-                return Direction.UP;
-            case 4:
-                return Direction.RIGHT;
-            default:
-                break;
-        }
-        return null;
-
     }
 
     public static double calculateDistance(Cross cross, Car car) {
@@ -329,4 +310,11 @@ class Car extends Rectangle implements Runnable {
         }
         return false; // Another intersection is controlling the car
     }
+
+    public Cross findClosestIntersection(List<Cross> intersections) {
+        return intersections.stream()
+                .min(Comparator.comparingDouble(cross -> Car.calculateDistance(cross, this)))
+                .orElse(null);
+    }
+
 }

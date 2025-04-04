@@ -16,7 +16,7 @@ import javafx.scene.layout.HBox;
 import javafx.scene.layout.Pane;
 import javafx.scene.layout.VBox;
 import javafx.scene.paint.Color;
-import javafx.scene.paint.Paint;
+
 import javafx.scene.shape.Rectangle;
 import javafx.stage.Stage;
 import javafx.util.Duration;
@@ -216,7 +216,7 @@ public class Main extends Application {
     }
 
     public void drawCarGui() {
-        biler.getChildren().removeAll();
+        biler.getChildren().clear();
         for (Car car : carList) {
             Rectangle bil = new Rectangle();
             bil.setWidth(20);
