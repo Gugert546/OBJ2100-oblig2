@@ -168,29 +168,90 @@ class Car extends Rectangle implements Runnable {
 
     /** logikk for kjøring */
     private void drivingLogic() {
+        lightCheck();
         outOfBoundsCheck();
         Car frontCar = findFrontCar();
+        findFrontCross();
+        double avstand;
 
-        if (rødt) {
-            double avstand = calculateDistance(currentIntersection, this);
-            if (avstand <= 80) {
+        if (frontCar != null) {
+            avstand = calculateDistance(this, frontCar);
+            if (avstand <= 60) {
+                System.out.println("avstand: " + avstand);
                 setSpeed(Speed.STOP);
-            } else if (avstand >= 80 && avstand <= 100) {
+
+            } else if (avstand <= 80) {
+                System.out.println("avstand: " + avstand);
                 setSpeed(Speed.LOW);
-            } else
-                setSpeed(Speed.HIGH);
-        } else if (frontCar != null) {
-            double avstand = calculateDistance(frontCar, this);
-            if (avstand < 60) {
+
+            }
+        }
+
+        if (rødt && currentIntersection != null) {
+            double distToCross = calculateDistance(currentIntersection, this);
+            if (distToCross < 30 && distToCross > 10) {
+                System.out.println("disttocross: " + distToCross);
                 setSpeed(Speed.STOP);
-                System.out.println("for nærme, stopper" + x() + y() + "   " + frontCar.x() + frontCar.y() + avstand);
-            } else if (avstand >= 60 && avstand < 85) {
+
+            } else if (distToCross < 60 && distToCross > 30) {
+                System.out.println("disttocross: " + distToCross);
                 setSpeed(Speed.LOW);
-                System.out.println("sakker ned farten" + x() + y());
-            } else
-                setSpeed(Speed.HIGH);
-        } else
+
+            }
+        }
+        if (frontCar == null && rødt == false) {
             setSpeed(Speed.HIGH);
+        }
+    }
+
+    private void lightCheck() {
+        if (currentIntersection != null) {
+            trafficjava.Cross.Direction lys = currentIntersection.getState();
+            if (lys == trafficjava.Cross.Direction.RIGHT && this.direction == Direction.LEFT ||
+                    lys == trafficjava.Cross.Direction.LEFT && this.direction == Direction.RIGHT ||
+                    lys == trafficjava.Cross.Direction.UP && this.direction == Direction.DOWN ||
+                    lys == trafficjava.Cross.Direction.DOWN && this.direction == Direction.UP) {
+                redLight(true);
+                return;
+            } else
+                redLight(false);
+        }
+    }
+
+    private void findFrontCross() {
+
+        this.currentIntersection = Main.crossList.stream()
+
+                .filter(cross -> {
+
+                    switch (direction) {
+                        case RIGHT:
+                            return Math.abs(cross.getY() - y) < 30 && cross.getX() > x;
+                        case LEFT:
+                            return Math.abs(cross.getY() - y) < 30 && cross.getX() < x;
+                        case UP:
+                            return Math.abs(cross.getX() - x) < 30 && cross.getY() < y;
+                        case DOWN:
+                            return Math.abs(cross.getX() - x) < 30 && cross.getY() > y;
+                        default:
+                            return false;
+                    }
+
+                })
+                .min(Comparator.comparingDouble(cross -> {
+                    switch (direction) {
+                        case RIGHT:
+                        case LEFT:
+                            return Math.abs(cross.getX() - x);
+                        case UP:
+                        case DOWN:
+                            return Math.abs(cross.getY() - y);
+                        default:
+                            return Double.MAX_VALUE;
+                    }
+                }))
+                .orElse(null);
+
     }
 
     private Speed getSpeed() {
@@ -249,6 +310,7 @@ class Car extends Rectangle implements Runnable {
 
     }
 
+    /** oppdaterer bilene på UI-tråden, gjør av vi kan se forflyttelse */
     public void updateUI() {
         Platform.runLater(() -> shape.setX(x));
         Platform.runLater(() -> shape.setY(y));
@@ -275,13 +337,8 @@ class Car extends Rectangle implements Runnable {
      * @param cross settes til krysset som har rødt lys
      * @param rødt  boolean, settes til true hvis rødt
      */
-    public void redLight(Cross cross, boolean rødt) {
+    public void redLight(boolean rødt) {
         this.rødt = rødt;
-        setCurrentIntersection(cross);
-        if (rødt == true) {
-            System.out.println("car X:" + x() + "Y: " + y() + " har rødt lys");
-        } else
-            System.out.println("car X:" + x() + "Y: " + y() + " har grønnt lys");
     }
 
     public static double calculateDistance(Cross cross, Car car) {
@@ -296,25 +353,25 @@ class Car extends Rectangle implements Runnable {
     public Cross getCurrentIntersection() {
         return currentIntersection;
     }
-
-    public boolean tryClaimIntersection(Cross intersection) {
-        if (lock.tryLock()) { // Try to acquire the lock without blocking
-            try {
-                if (currentIntersection == null || currentIntersection == intersection) {
-                    currentIntersection = intersection;
-                    return true; // Successfully claimed
-                }
-            } finally {
-                lock.unlock(); // Always unlock
-            }
-        }
-        return false; // Another intersection is controlling the car
-    }
-
-    public Cross findClosestIntersection(List<Cross> intersections) {
-        return intersections.stream()
-                .min(Comparator.comparingDouble(cross -> Car.calculateDistance(cross, this)))
-                .orElse(null);
-    }
-
+    /*
+     * public boolean tryClaimIntersection(Cross intersection) {
+     * if (lock.tryLock()) { // Try to acquire the lock without blocking
+     * try {
+     * if (currentIntersection == null || currentIntersection == intersection) {
+     * currentIntersection = intersection;
+     * return true; // Successfully claimed
+     * }
+     * } finally {
+     * lock.unlock(); // Always unlock
+     * }
+     * }
+     * return false; // Another intersection is controlling the car
+     * }
+     * 
+     * public Cross findClosestIntersection(List<Cross> intersections) {
+     * return intersections.stream()
+     * .min(Comparator.comparingDouble(cross -> Car.calculateDistance(cross, this)))
+     * .orElse(null);
+     * }
+     */
 }

@@ -181,8 +181,9 @@ public class Cross extends Group {
         lysvenstre.getChildren().addAll(sirkelvenstre);
         getChildren().addAll(lysvenstre);
 
-        start();
+        
         setState(state);
+        startLys();
     }
 
     /** setter en tilfeldig retning på lyset */
@@ -251,139 +252,23 @@ public class Cross extends Group {
         return retning;
 
     }
-
-    public void releaseCar(Car car) {
-        if (car.getCurrentIntersection() == this) {
-            car.setCurrentIntersection(null);
-        }
-    }
+    /*
+     * public void releaseCar(Car car) {
+     * if (car.getCurrentIntersection() == this) {
+     * car.setCurrentIntersection(null);
+     * }
+     * }
+     */
 
     /** metode for å sette state til lysene */
     public void setState(Direction retning) {
         this.lastState = this.state;
         this.state = retning;
         updateColor();
-        if (this.lastState != this.state) {
-            Main.carList.forEach(car -> releaseCar(car));
-        }
-        switch (state) {
-            case RIGHT:// lyset på høyre side sett ovenfra
-                carFromLEFT.ifPresent(car -> {
-                    Cross closest = car.findClosestIntersection(Main.crossList);
-                    if (closest == this && car.tryClaimIntersection(this)) {
-                        car.redLight(this, true); // Stop the car
-                    }
-                }); // stop cars from the left
+    }
 
-                carFromRIGHT.ifPresent(car -> {
-                    Cross closest = car.findClosestIntersection(Main.crossList);
-                    if (closest == this && car.tryClaimIntersection(this)) {
-                        car.redLight(this, false); // Stop the car
-                    }
-                }); // allow cars from the right
-
-                carFromDOWN.ifPresent(car -> {
-                    Cross closest = car.findClosestIntersection(Main.crossList);
-                    if (closest == this && car.tryClaimIntersection(this)) {
-                        car.redLight(this, true); // Stop the car
-                    }
-                }); // Stop cars from bottom
-                carFromUP.ifPresent(car -> {
-                    Cross closest = car.findClosestIntersection(Main.crossList);
-                    if (closest == this && car.tryClaimIntersection(this)) {
-                        car.redLight(this, true); // Stop the car
-                    }
-                }); // stop cars from top
-                break;
-            case LEFT:// lyset på venstre side sett ovenfra
-                carFromLEFT.ifPresent(car -> {
-                    Cross closest = car.findClosestIntersection(Main.crossList);
-                    if (closest == this && car.tryClaimIntersection(this)) {
-                        car.redLight(this, false); // Stop the car
-                    }
-                });// allow cars from the left
-                carFromRIGHT.ifPresent(car -> {
-                    Cross closest = car.findClosestIntersection(Main.crossList);
-                    if (closest == this && car.tryClaimIntersection(this)) {
-                        car.redLight(this, true); // Stop the car
-                    }
-                }); // stop cars from the right
-                carFromDOWN.ifPresent(car -> {
-                    Cross closest = car.findClosestIntersection(Main.crossList);
-                    if (closest == this && car.tryClaimIntersection(this)) {
-                        car.redLight(this, true); // Stop the car
-                    }
-                }); // Stop cars from bottom
-                carFromUP.ifPresent(car -> {
-                    Cross closest = car.findClosestIntersection(Main.crossList);
-                    if (closest == this && car.tryClaimIntersection(this)) {
-                        car.redLight(this, true); // Stop the car
-                    }
-                }); // stop cars from top
-
-                break;
-            case DOWN:// lyset nede, sett ovefra
-                carFromLEFT.ifPresent(car -> {
-                    Cross closest = car.findClosestIntersection(Main.crossList);
-                    if (closest == this && car.tryClaimIntersection(this)) {
-                        car.redLight(this, true); // Stop the car
-                    }
-                });// stop cars from the left
-
-                carFromRIGHT.ifPresent(car -> {
-                    Cross closest = car.findClosestIntersection(Main.crossList);
-                    if (closest == this && car.tryClaimIntersection(this)) {
-                        car.redLight(this, true); // Stop the car
-                    }
-                }); // stop cars from the right
-
-                carFromDOWN.ifPresent(car -> {
-                    Cross closest = car.findClosestIntersection(Main.crossList);
-                    if (closest == this && car.tryClaimIntersection(this)) {
-                        car.redLight(this, false); // Stop the car
-                    }
-                }); // allow cars from bottom
-
-                carFromUP.ifPresent(car -> {
-                    Cross closest = car.findClosestIntersection(Main.crossList);
-                    if (closest == this && car.tryClaimIntersection(this)) {
-                        car.redLight(this, true); // Stop the car
-                    }
-                }); // stop cars from top
-                break;
-            case UP:// lyset opp, sett ovefra
-                carFromLEFT.ifPresent(car -> {
-                    Cross closest = car.findClosestIntersection(Main.crossList);
-                    if (closest == this && car.tryClaimIntersection(this)) {
-                        car.redLight(this, true); // Stop the car
-                    }
-                }); // stop cars from the left
-
-                carFromRIGHT.ifPresent(car -> {
-                    Cross closest = car.findClosestIntersection(Main.crossList);
-                    if (closest == this && car.tryClaimIntersection(this)) {
-                        car.redLight(this, true); // Stop the car
-                    }
-                }); // stop cars from the left
-
-                carFromDOWN.ifPresent(car -> {
-                    Cross closest = car.findClosestIntersection(Main.crossList);
-                    if (closest == this && car.tryClaimIntersection(this)) {
-                        car.redLight(this, true); // Stop the car
-                    }
-                }); // stop cars from the left
-                carFromUP.ifPresent(car -> {
-                    Cross closest = car.findClosestIntersection(Main.crossList);
-                    if (closest == this && car.tryClaimIntersection(this)) {
-                        car.redLight(this, false); // Stop the car
-                    }
-                }); // stop cars from the left
-
-                break;
-
-            default:
-                break;
-        }
+    public Direction getState() {
+        return this.state;
     }
 
     /** metode for lys til høyre */
@@ -460,42 +345,7 @@ public class Cross extends Group {
                 break;
 
             default:
-                break;
         }
-
-    }
-
-    /** finner biler som kommer fra venstre */
-    public Optional<Car> carComingFromLeft() {
-        return Main.carList.stream()
-                .filter(car -> Math.abs(car.y() - y) < 5 && car.x() < x
-                        && car.getDirection() == trafficjava.Car.Direction.RIGHT) // Coming from left
-                .filter(car -> Car.calculateDistance(this, car) <= 100) // Within 100px
-                .min(Comparator.comparingDouble(car -> Car.calculateDistance(this, car))); // Closest car
-    }
-
-    public Optional<Car> carComingFromRight() {
-        return Main.carList.stream()
-                .filter(car -> Math.abs(car.y() - y) < 30 && car.x() > x
-                        && car.getDirection() == trafficjava.Car.Direction.LEFT) // Coming from right
-                .filter(car -> Car.calculateDistance(this, car) <= 100) // Within 100px
-                .min(Comparator.comparingDouble(car -> Car.calculateDistance(this, car))); // Closest car
-    }
-
-    public Optional<Car> carComingFromTop() {
-        return Main.carList.stream()
-                .filter(car -> Math.abs(car.x() - x) < 30 && car.y() < y
-                        && car.getDirection() == trafficjava.Car.Direction.DOWN) // Coming from top
-                .filter(car -> Car.calculateDistance(this, car) <= 100) // Within 100px
-                .min(Comparator.comparingDouble(car -> Car.calculateDistance(this, car))); // Closest car
-    }
-
-    public Optional<Car> carComingFromBottom() {
-        return Main.carList.stream()
-                .filter(car -> Math.abs(car.x() - x) < 5 && car.y() > y
-                        && car.getDirection() == trafficjava.Car.Direction.UP) // Coming from bottom
-                .filter(car -> Car.calculateDistance(this, car) <= 100) // Within 100px
-                .min(Comparator.comparingDouble(car -> Car.calculateDistance(this, car))); // Closest car
     }
 
     /** oppdater fargene til lysene på ui tråden */
@@ -503,6 +353,7 @@ public class Cross extends Group {
         Platform.runLater(() -> {
             switch (state) {
                 case RIGHT:
+
                     høyre();
                     break;
                 case LEFT:
@@ -512,6 +363,7 @@ public class Cross extends Group {
                     opp();
                     break;
                 case DOWN:
+
                     ned();
                     break;
                 default:
@@ -521,7 +373,9 @@ public class Cross extends Group {
         });
     }
 
-    /**
+    /*
+     * 
+     * 
      * set tiden for grønt lys
      * 
      * @param tid antall millisekunder
@@ -553,17 +407,7 @@ public class Cross extends Group {
 
     }
 
-    /** oppdaterer lista over biler, sender også */
-    private void updateList() {
-        this.carFromLEFT = carComingFromLeft();
-        this.carFromRIGHT = carComingFromRight();
-        this.carFromUP = carComingFromTop();
-        this.carFromDOWN = carComingFromBottom();
-
-    }
-
     private void startLys() {
-        updateList();
         lyslogikk();
         Timeline lightSwitcher = new Timeline(new KeyFrame(Duration.millis(Cross.GTI), event -> lyslogikk()));
         lightSwitcher.setCycleCount(Timeline.INDEFINITE);
@@ -584,11 +428,5 @@ public class Cross extends Group {
         lightSwitcher.play();
     }
 
-    /** metode for å starte lysene, og updater som går hvert 100millis */
-    private void start() {
-        startLys();
-        Timeline updater = new Timeline(new KeyFrame(Duration.millis(100), event -> updateList()));
-        updater.setCycleCount(Timeline.INDEFINITE); // Runs forever
-        updater.play();
-    }
+   
 }

@@ -52,7 +52,6 @@ public class Main extends Application {
 
     public void start(Stage primaryStage) {
         this.TrafficPane = drawScreen();
-
         Timeline carSpawner = new Timeline(new KeyFrame(Duration.seconds(1), event -> {
             if (carList.size() >= CAR_COUNT)
                 return;
@@ -61,10 +60,11 @@ public class Main extends Application {
             Main.carList.add(car);
             TrafficPane.getChildren().add(car.getShape());
             car.toFront();
+            // printer hvor mange biler som ligger i bil-lista (debug)
             System.out.println(carList.size());
 
         }));
-        carSpawner.setCycleCount(Timeline.INDEFINITE); // Set limit for spawning
+        carSpawner.setCycleCount(Timeline.INDEFINITE); // fortsetter å spawne hele tiden
         carSpawner.play(); // Start the spawning timeline
 
         Scene trafficSim = new Scene(TrafficPane, 800, 600);
