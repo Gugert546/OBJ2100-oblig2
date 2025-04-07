@@ -1,8 +1,5 @@
 package trafficjava;
 
-import java.util.Comparator;
-
-import java.util.Optional;
 import java.util.Random;
 
 import javafx.animation.KeyFrame;
@@ -11,6 +8,7 @@ import javafx.application.Platform;
 import javafx.scene.Group;
 import javafx.scene.effect.Light;
 import javafx.scene.effect.Lighting;
+import javafx.scene.layout.Region;
 import javafx.scene.paint.Color;
 import javafx.scene.shape.Circle;
 import javafx.scene.shape.Line;
@@ -27,10 +25,10 @@ public class Cross extends Group {
     private static int lengde = 80; // lengden på veiene i krysset
     private static int width = 60; // bredden på veiene i krysset
     public static long GTI = 4000; // tiden på lyset i millisekunder
+    public static long yT = 2000; // tiden på gult lys
 
     private Direction state; // hvilken retning som har grønnt lys
-    private Direction lastState; // hvilken retning som hadde grønt sist-- kan brukes til gult lys
-    private Timeline lightSwitcher; // timeline for å bytte farge på lys
+    // farge på lys
 
     // lys-variabler
     private int x, y; // x og y posisjonen til krysset
@@ -41,12 +39,12 @@ public class Cross extends Group {
     // lys i lampene
     private Light.Distant greenlight = new Light.Distant();
     private Light.Distant redlight = new Light.Distant();
+    private Light.Distant yellowLight = new Light.Distant();
     private Lighting grøntlys = new Lighting(greenlight);
     private Lighting rødtlys = new Lighting(redlight);
-    private Optional<Car> carFromLEFT;
-    private Optional<Car> carFromRIGHT;
-    private Optional<Car> carFromUP;
-    private Optional<Car> carFromDOWN;
+    private Lighting gultlys = new Lighting(yellowLight);
+    // region som biler ikke stopper i
+    private Region stopZone;
 
     /**
      * konsturktør for kryss
@@ -59,14 +57,22 @@ public class Cross extends Group {
         this.x = midtX;
         this.y = midtY;
         randomState();
+        // Create the stop zone
+        stopZone = new Region();
+        stopZone.setPrefSize(60, 60); // Adjust size as needed
+        stopZone.setLayoutX(x - 30); // Center the region around the cross
+        stopZone.setLayoutY(y - 30);
+        getChildren().add(stopZone);
 
-        // this.state = randomState();
         greenlight.setAzimuth(45);
         greenlight.setElevation(60);
         greenlight.setColor(Color.LIGHTGREEN);
         redlight.setAzimuth(45);
         redlight.setElevation(60);
         redlight.setColor(Color.RED);
+        yellowLight.setAzimuth(45);
+        yellowLight.setElevation(60);
+        yellowLight.setColor(Color.YELLOW);
         // varibler for roadmarkings
         int xtilvenstre = x - (width / 2);
         int yoppover = y - (width / 2);
@@ -181,7 +187,6 @@ public class Cross extends Group {
         lysvenstre.getChildren().addAll(sirkelvenstre);
         getChildren().addAll(lysvenstre);
 
-        
         setState(state);
         startLys();
     }
@@ -218,19 +223,14 @@ public class Cross extends Group {
         return y;
     }
 
-    /** metode for å sette bredden på veien/krysset */
-    public static void setWidth(int width) {
-        Cross.width = width;
-    }
-
     /** metode for å få bredden på veien/veien i krysset */
     public static int getWidth() {
         return width;
     }
 
-    /** metode for å sette lengden på veien i krysset */
-    public void setLength(int lenght) {
-        Cross.lengde = lenght;
+    /** metode for å få stopZone */
+    public Region getStopZone() {
+        return stopZone;
     }
 
     /** metode for å få lengden på veien i krysset */
@@ -252,17 +252,9 @@ public class Cross extends Group {
         return retning;
 
     }
-    /*
-     * public void releaseCar(Car car) {
-     * if (car.getCurrentIntersection() == this) {
-     * car.setCurrentIntersection(null);
-     * }
-     * }
-     */
 
     /** metode for å sette state til lysene */
     public void setState(Direction retning) {
-        this.lastState = this.state;
         this.state = retning;
         updateColor();
     }
@@ -328,24 +320,56 @@ public class Cross extends Group {
         sirkelvenstre.setEffect(rødtlys);
     }
 
-    private void gul() {
-        switch (lastState) {
-            case RIGHT:
+    /** metode for å sette gult lys */
+    private void gult() {
+        Platform.runLater(() -> {
+            switch (state) {
+                case RIGHT:
+                    sirkelhøyre.setFill(Color.YELLOW);
+                    sirkelhøyre.setEffect(gultlys);
+                    sirkelned.setFill(Color.RED);
+                    sirkelned.setEffect(rødtlys);
+                    sirkelopp.setFill(Color.RED);
+                    sirkelopp.setEffect(rødtlys);
+                    sirkelvenstre.setFill(Color.RED);
+                    sirkelvenstre.setEffect(rødtlys);
+                    break;
+                case LEFT:
+                    sirkelhøyre.setFill(Color.RED);
+                    sirkelhøyre.setEffect(rødtlys);
+                    sirkelned.setFill(Color.RED);
+                    sirkelned.setEffect(rødtlys);
+                    sirkelopp.setFill(Color.RED);
+                    sirkelopp.setEffect(rødtlys);
+                    sirkelvenstre.setFill(Color.YELLOW);
+                    sirkelvenstre.setEffect(gultlys);
+                    break;
+                case UP:
+                    sirkelhøyre.setFill(Color.RED);
+                    sirkelhøyre.setEffect(rødtlys);
+                    sirkelned.setFill(Color.RED);
+                    sirkelned.setEffect(rødtlys);
+                    sirkelopp.setFill(Color.YELLOW);
+                    sirkelopp.setEffect(gultlys);
+                    sirkelvenstre.setFill(Color.RED);
+                    sirkelvenstre.setEffect(rødtlys);
 
-                break;
-            case LEFT:
-                // TODO lag gult lys i javafx
-                // gult lys, resten rødt
-                break;
-            case UP:
+                    break;
+                case DOWN:
+                    sirkelhøyre.setFill(Color.RED);
+                    sirkelhøyre.setEffect(rødtlys);
+                    sirkelned.setFill(Color.YELLOW);
+                    sirkelned.setEffect(gultlys);
+                    sirkelopp.setFill(Color.RED);
+                    sirkelopp.setEffect(rødtlys);
+                    sirkelvenstre.setFill(Color.RED);
+                    sirkelvenstre.setEffect(rødtlys);
 
-                break;
-            case DOWN:
+                    break;
 
-                break;
-
-            default:
-        }
+                default:
+            }
+        });
     }
 
     /** oppdater fargene til lysene på ui tråden */
@@ -374,8 +398,6 @@ public class Cross extends Group {
     }
 
     /*
-     * 
-     * 
      * set tiden for grønt lys
      * 
      * @param tid antall millisekunder
@@ -407,26 +429,19 @@ public class Cross extends Group {
 
     }
 
+    /** metode for å starte lysene, kjører en gang, før den starter en timeline. */
     private void startLys() {
         lyslogikk();
-        Timeline lightSwitcher = new Timeline(new KeyFrame(Duration.millis(Cross.GTI), event -> lyslogikk()));
-        lightSwitcher.setCycleCount(Timeline.INDEFINITE);
+        Timeline lightSwitcher = new Timeline(new KeyFrame(Duration.millis(Cross.GTI), event -> startYellowPhase()));
+        lightSwitcher.setCycleCount(1);
         lightSwitcher.play();
     }
 
-    /**
-     * metode for å oppdatere hvor ofte noe skjer i timelinene, ikke fungerende enda
-     */
-    // Method to change GTI dynamically
-    public void updateGTI() {
-
-        // Stop the current timeline
-        lightSwitcher.stop();
-
-        // Update GTI and restart the timeline with the new interval
-        lightSwitcher.getKeyFrames().set(0, new KeyFrame(Duration.millis(GTI), event -> lyslogikk()));
-        lightSwitcher.play();
+    private void startYellowPhase() {
+        gult(); // Turn on yellow light
+        Timeline yellowTimer = new Timeline(new KeyFrame(Duration.millis(yT), event -> startLys()));
+        yellowTimer.setCycleCount(1);
+        yellowTimer.play();
     }
 
-   
 }

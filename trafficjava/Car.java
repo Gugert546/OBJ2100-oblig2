@@ -1,16 +1,12 @@
 package trafficjava;
 
 import javafx.scene.shape.Rectangle;
-
 import java.util.Comparator;
-import java.util.List;
-
 import javafx.application.Platform;
+import javafx.scene.layout.Region;
 import javafx.scene.paint.Color;
 import javafx.scene.paint.Paint;
-
 import java.util.Random;
-import java.util.concurrent.locks.ReentrantLock;
 
 class Car extends Rectangle implements Runnable {
 
@@ -25,9 +21,10 @@ class Car extends Rectangle implements Runnable {
     public Speed speed;
     public static final int CAR_WIDTH = 24;
     public static final int CAR_HEIGHT = 50;
-    private final ReentrantLock lock = new ReentrantLock();
+    private int midtY = CAR_WIDTH / 2;
+    private int midtX = CAR_HEIGHT / 2;
 
-    public static int maxSpeed = 2;
+    public static int maxSpeed = 3;
 
     private Rectangle shape;
     public Paint color;
@@ -37,7 +34,8 @@ class Car extends Rectangle implements Runnable {
     private double y;
     public Direction direction;
     public double acceleration;
-    private boolean rødt;
+    private boolean rødt; // rødt lys, true for rødt, false for grønt.
+    private boolean gult; // gult lys, true for gult, false for ikke gult
 
     private Cross currentIntersection;
 
@@ -173,6 +171,19 @@ class Car extends Rectangle implements Runnable {
         Car frontCar = findFrontCar();
         findFrontCross();
         double avstand;
+        // Check if approaching intersection
+        boolean isApproaching = false;
+        double distToCross = Double.MAX_VALUE;
+        if (currentIntersection != null) {
+
+            distToCross = calculateDistance(currentIntersection, this.midtY, this.midtX);
+            isApproaching = switch (direction) {
+                case RIGHT -> currentIntersection.getX() > midtX;
+                case LEFT -> currentIntersection.getX() < midtX;
+                case UP -> currentIntersection.getY() < midtY;
+                case DOWN -> currentIntersection.getY() > midtY;
+            };
+        }
 
         if (frontCar != null) {
             avstand = calculateDistance(this, frontCar);
@@ -180,26 +191,41 @@ class Car extends Rectangle implements Runnable {
                 System.out.println("avstand: " + avstand);
                 setSpeed(Speed.STOP);
 
-            } else if (avstand <= 80) {
+            } else if (avstand <= 60) {
                 System.out.println("avstand: " + avstand);
                 setSpeed(Speed.LOW);
 
             }
         }
 
-        if (rødt && currentIntersection != null) {
-            double distToCross = calculateDistance(currentIntersection, this);
-            if (distToCross < 30 && distToCross > 10) {
-                System.out.println("disttocross: " + distToCross);
-                setSpeed(Speed.STOP);
-
-            } else if (distToCross < 60 && distToCross > 30) {
-                System.out.println("disttocross: " + distToCross);
-                setSpeed(Speed.LOW);
-
+        if (currentIntersection != null) {
+            Region zone = currentIntersection.getStopZone();
+            if (this.getBoundsInParent().intersects(zone.getBoundsInParent())) {
+                setSpeed(Speed.HIGH);
+            } else if (rødt && isApproaching) {
+                if (distToCross <= 100) {
+                    setSpeed(Speed.STOP);
+                } else if (distToCross <= 150) {
+                    setSpeed(Speed.LOW);
+                }
             }
         }
-        if (frontCar == null && rødt == false) {
+
+        if (gult && currentIntersection != null) {
+
+            if (distToCross >= 60
+                    && distToCross < 90) {
+                setSpeed(Speed.STOP);
+            }
+            if (distToCross < 60) {
+                setSpeed(Speed.HIGH);
+            }
+            if (distToCross > 90
+                    && distToCross < 120) {
+                setSpeed(Speed.LOW);
+            }
+        }
+        if (frontCar == null && !rødt && !gult) {
             setSpeed(Speed.HIGH);
         }
     }
@@ -211,10 +237,10 @@ class Car extends Rectangle implements Runnable {
                     lys == trafficjava.Cross.Direction.LEFT && this.direction == Direction.RIGHT ||
                     lys == trafficjava.Cross.Direction.UP && this.direction == Direction.DOWN ||
                     lys == trafficjava.Cross.Direction.DOWN && this.direction == Direction.UP) {
-                redLight(true);
+                redLight(false);
                 return;
             } else
-                redLight(false);
+                redLight(true);
         }
     }
 
@@ -226,13 +252,17 @@ class Car extends Rectangle implements Runnable {
 
                     switch (direction) {
                         case RIGHT:
-                            return Math.abs(cross.getY() - y) < 30 && cross.getX() > x;
+                            return Math.abs(cross.getY() - y) < 30 && cross.getX() > x &&
+                                    Math.abs(cross.getX() - x) <= 100;
                         case LEFT:
-                            return Math.abs(cross.getY() - y) < 30 && cross.getX() < x;
+                            return Math.abs(cross.getY() - y) < 30 && cross.getX() < x &&
+                                    Math.abs(cross.getX() - x) <= 100;
                         case UP:
-                            return Math.abs(cross.getX() - x) < 30 && cross.getY() < y;
+                            return Math.abs(cross.getX() - x) < 30 && cross.getY() < y &&
+                                    Math.abs(cross.getY() - y) <= 100;
                         case DOWN:
-                            return Math.abs(cross.getX() - x) < 30 && cross.getY() > y;
+                            return Math.abs(cross.getX() - x) < 30 && cross.getY() > y &&
+                                    Math.abs(cross.getY() - y) <= 100;
                         default:
                             return false;
                     }
@@ -334,16 +364,15 @@ class Car extends Rectangle implements Runnable {
     /**
      * metode for å fortelle bilen at lyset er rødt
      * 
-     * @param cross settes til krysset som har rødt lys
-     * @param rødt  boolean, settes til true hvis rødt
+     * @param rødt boolean, settes til true hvis rødt
      */
     public void redLight(boolean rødt) {
         this.rødt = rødt;
     }
 
-    public static double calculateDistance(Cross cross, Car car) {
-        return Math.sqrt(Math.pow(cross.getX() - car.y(), 2) +
-                Math.pow(cross.getX() - car.y(), 2));
+    public static double calculateDistance(Cross cross, int midtY, int midtX) {
+        return Math.sqrt(Math.pow(cross.getX() - midtX, 2) +
+                Math.pow(cross.getY() - midtY, 2));
     }
 
     public void setCurrentIntersection(Cross cross) {
