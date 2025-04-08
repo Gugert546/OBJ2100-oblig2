@@ -44,7 +44,13 @@ public class Cross extends Group {
     private Lighting rødtlys = new Lighting(redlight);
     private Lighting gultlys = new Lighting(yellowLight);
     // region som biler ikke stopper i
+    private Rectangle noStopZone;
+    // region som biler stopper i
     private Rectangle stopZone;
+    // region som biler kjører sakte i
+    private Rectangle slowZone;
+    // region som biler svinger i
+    private Rectangle turnZone;
 
     /**
      * konsturktør for kryss
@@ -57,13 +63,27 @@ public class Cross extends Group {
         this.x = midtX;
         this.y = midtY;
         randomState();
-        // Create the stop zone if a car is inside, it will continue even after the
+        // Create the no stop zone if a car is inside, it will continue even after the
         // light changes
-        stopZone = new Rectangle(x - 40, y - 40, 80, 80);
+        noStopZone = new Rectangle(x - 40, y - 40, 80, 80);
+        // create a stop zone, where cars will stop if the light is red
+        stopZone = new Rectangle(x - 80, y - 80, 160, 160);
+        stopZone.setFill(Color.YELLOW);
+        // create a slow zone, where cars will be slowed
+        slowZone = new Rectangle(x - 140, y - 140, 280, 280);
+        slowZone.setFill(Color.ALICEBLUE);
+        slowZone.setVisible(false);
+        // create a turn zone,where cars will get a new direction
+        turnZone = new Rectangle(x - 10, y - 10, 20, 20);
+        getChildren().add(turnZone);
+        getChildren().add(slowZone);
+        getChildren().add(noStopZone);
         getChildren().add(stopZone);
-
-        stopZone.setFill(Color.BLACK);
-        stopZone.setVisible(true); // or false in production
+        turnZone.setVisible(true);// debug
+        turnZone.setFill(Color.BLACK);
+        stopZone.setVisible(false); // debug
+        noStopZone.setFill(Color.BLACK);
+        noStopZone.setVisible(false); // or false in production
 
         greenlight.setAzimuth(45);
         greenlight.setElevation(60);
@@ -187,7 +207,10 @@ public class Cross extends Group {
         sirkelvenstre.setFill(Color.WHITE);
         lysvenstre.getChildren().addAll(sirkelvenstre);
         getChildren().addAll(lysvenstre);
+        turnZone.toFront();
         stopZone.toFront();
+        noStopZone.toFront();
+        slowZone.toFront();
         setState(state);
         startLys();
     }
@@ -229,29 +252,13 @@ public class Cross extends Group {
         return width;
     }
 
-    /** metode for å få stopZone */
-    public Rectangle getStopZone() {
-        return stopZone;
-    }
-
-    /** metode for å få lengden på veien i krysset */
+    /**
+     * metode for å få lengden på veien i krysset
+     * 
+     * @return int
+     */
     public static int getLength() {
         return lengde;
-    }
-
-    /**
-     * metode for å få en tilfeldig ny retning
-     * 
-     * @param direction settes til retningen bilen kjører(Car.getDirection())
-     */
-    public int randomDirection(int direction) {
-        int retning;
-        Random random = new Random();
-        do {
-            retning = random.nextInt(4) + 1;
-        } while (retning == direction);
-        return retning;
-
     }
 
     /** metode for å sette state til lysene */
@@ -260,65 +267,13 @@ public class Cross extends Group {
         updateColor();
     }
 
+    /**
+     * get merode for staten til lyset
+     * 
+     * @return Diretion enum
+     */
     public Direction getState() {
         return this.state;
-    }
-
-    /** metode for lys til høyre */
-    private void høyre() {
-        sirkelhøyre.setFill(Color.GREEN);
-        sirkelhøyre.setEffect(grøntlys);
-
-        sirkelned.setFill(Color.RED);
-        sirkelned.setEffect(rødtlys);
-
-        sirkelopp.setFill(Color.RED);
-        sirkelopp.setEffect(rødtlys);
-
-        sirkelvenstre.setFill(Color.RED);
-        sirkelvenstre.setEffect(rødtlys);
-
-    }
-
-    /** metode for lys til venstre */
-    private void venstre() {
-
-        sirkelhøyre.setFill(Color.RED);
-        sirkelhøyre.setEffect(rødtlys);
-        sirkelned.setFill(Color.RED);
-        sirkelned.setEffect(rødtlys);
-        sirkelopp.setFill(Color.RED);
-        sirkelopp.setEffect(rødtlys);
-        sirkelvenstre.setFill(Color.GREEN);
-        sirkelvenstre.setEffect(grøntlys);
-
-    }
-
-    /** metode for lys oppover */
-    private void opp() {
-
-        sirkelhøyre.setFill(Color.RED);
-        sirkelhøyre.setEffect(rødtlys);
-        sirkelned.setFill(Color.RED);
-        sirkelned.setEffect(rødtlys);
-        sirkelopp.setFill(Color.GREEN);
-        sirkelopp.setEffect(grøntlys);
-        sirkelvenstre.setFill(Color.RED);
-        sirkelvenstre.setEffect(rødtlys);
-
-    }
-
-    /** metode for lys ned */
-    private void ned() {
-
-        sirkelhøyre.setFill(Color.RED);
-        sirkelhøyre.setEffect(rødtlys);
-        sirkelned.setFill(Color.GREEN);
-        sirkelned.setEffect(grøntlys);
-        sirkelopp.setFill(Color.RED);
-        sirkelopp.setEffect(rødtlys);
-        sirkelvenstre.setFill(Color.RED);
-        sirkelvenstre.setEffect(rødtlys);
     }
 
     /** metode for å sette gult lys */
@@ -378,18 +333,44 @@ public class Cross extends Group {
         Platform.runLater(() -> {
             switch (state) {
                 case RIGHT:
-
-                    høyre();
+                    sirkelhøyre.setFill(Color.GREEN);
+                    sirkelhøyre.setEffect(grøntlys);
+                    sirkelned.setFill(Color.RED);
+                    sirkelned.setEffect(rødtlys);
+                    sirkelopp.setFill(Color.RED);
+                    sirkelopp.setEffect(rødtlys);
+                    sirkelvenstre.setFill(Color.RED);
+                    sirkelvenstre.setEffect(rødtlys);
                     break;
                 case LEFT:
-                    venstre();
+                    sirkelhøyre.setFill(Color.RED);
+                    sirkelhøyre.setEffect(rødtlys);
+                    sirkelned.setFill(Color.RED);
+                    sirkelned.setEffect(rødtlys);
+                    sirkelopp.setFill(Color.RED);
+                    sirkelopp.setEffect(rødtlys);
+                    sirkelvenstre.setFill(Color.GREEN);
+                    sirkelvenstre.setEffect(grøntlys);
                     break;
                 case UP:
-                    opp();
+                    sirkelhøyre.setFill(Color.RED);
+                    sirkelhøyre.setEffect(rødtlys);
+                    sirkelned.setFill(Color.RED);
+                    sirkelned.setEffect(rødtlys);
+                    sirkelopp.setFill(Color.GREEN);
+                    sirkelopp.setEffect(grøntlys);
+                    sirkelvenstre.setFill(Color.RED);
+                    sirkelvenstre.setEffect(rødtlys);
                     break;
                 case DOWN:
-
-                    ned();
+                    sirkelhøyre.setFill(Color.RED);
+                    sirkelhøyre.setEffect(rødtlys);
+                    sirkelned.setFill(Color.GREEN);
+                    sirkelned.setEffect(grøntlys);
+                    sirkelopp.setFill(Color.RED);
+                    sirkelopp.setEffect(rødtlys);
+                    sirkelvenstre.setFill(Color.RED);
+                    sirkelvenstre.setEffect(rødtlys);
                     break;
                 default:
                     break;
@@ -430,14 +411,19 @@ public class Cross extends Group {
 
     }
 
-    /** metode for å starte lysene, kjører en gang, før den starter en timeline. */
+    /**
+     * metode for å starte lysene
+     */
     private void startLys() {
-        lyslogikk();
+        lyslogikk(); // bytt farge på lysene
         Timeline lightSwitcher = new Timeline(new KeyFrame(Duration.millis(Cross.GTI), event -> startYellowPhase()));
         lightSwitcher.setCycleCount(1);
         lightSwitcher.play();
     }
 
+    /**
+     * metode for å kjøre gule lys
+     */
     private void startYellowPhase() {
         gult(); // Turn on yellow light
         Timeline yellowTimer = new Timeline(new KeyFrame(Duration.millis(yT), event -> startLys()));
@@ -445,4 +431,39 @@ public class Cross extends Group {
         yellowTimer.play();
     }
 
+    /**
+     * get metode for ikke-stopp sonen
+     * 
+     * @return Rectangle
+     */
+    public Rectangle getnoStopZone() {
+        return noStopZone;
+    }
+
+    /**
+     * get metode for sakte sonen
+     * 
+     * @return Rectangle
+     */
+    public Rectangle getSlowZone() {
+        return slowZone;
+    }
+
+    /**
+     * metode for å få stopZone
+     * 
+     * @return Rectangle
+     */
+    public Rectangle getStopZone() {
+        return stopZone;
+    }
+
+    /**
+     * get metode for turnzone
+     * 
+     * @return Rectangle
+     */
+    public Rectangle getTurnZone() {
+        return turnZone;
+    }
 }

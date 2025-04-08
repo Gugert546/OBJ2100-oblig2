@@ -1,7 +1,11 @@
 package trafficjava;
 
 import javafx.scene.shape.Rectangle;
+
+import java.util.ArrayList;
 import java.util.Comparator;
+import java.util.List;
+
 import javafx.application.Platform;
 import javafx.geometry.Bounds;
 import javafx.scene.paint.Color;
@@ -11,7 +15,29 @@ import java.util.Random;
 class Car extends Rectangle implements Runnable {
 
     enum Direction {
-        UP, RIGHT, DOWN, LEFT
+        UP, RIGHT, DOWN, LEFT;
+
+        private static final Random PRNG = new Random();
+
+        public static Direction randomDirection() {
+            Direction[] directions = values();
+            return directions[PRNG.nextInt(directions.length)];
+        }
+
+        public static Direction randomDirectionExcludingOpposite(Direction current) {
+            List<Direction> options = new ArrayList<>(List.of(values()));
+            options.remove(oppositeOf(current));
+            return options.get(PRNG.nextInt(options.size()));
+        }
+
+        public static Direction oppositeOf(Direction dir) {
+            return switch (dir) {
+                case UP -> DOWN;
+                case DOWN -> UP;
+                case LEFT -> RIGHT;
+                case RIGHT -> LEFT;
+            };
+        }
     }
 
     enum Speed {
@@ -29,13 +55,13 @@ class Car extends Rectangle implements Runnable {
     private Rectangle shape;
     public Paint color;
 
-    private double currentSpeed;
     private double x;
     private double y;
     public Direction direction;
     public double acceleration;
     private boolean rødt; // rødt lys, true for rødt, false for grønt.
     private boolean gult; // gult lys, true for gult, false for ikke gult
+    private boolean hasTurned = false;
 
     private Cross currentIntersection;
 
@@ -59,10 +85,6 @@ class Car extends Rectangle implements Runnable {
 
     public Paint getColor() {
         return color;
-    }
-
-    public double getCurrentSpeed() {
-        return currentSpeed;
     }
 
     public int getintDirection() {
@@ -94,15 +116,15 @@ class Car extends Rectangle implements Runnable {
         switch (speed) {
             case LOW:
                 moveCar(0.5);
-                currentSpeed = 0.5;
+
                 break;
             case HIGH:
                 moveCar(maxSpeed);
-                currentSpeed = maxSpeed;
+
                 break;
             case STOP:
                 moveCar(0);
-                currentSpeed = 0;
+
                 break;
             default:
                 break;
@@ -115,28 +137,43 @@ class Car extends Rectangle implements Runnable {
         return color;
     }
 
-    public void setDirection(Direction direction) {
-        this.direction = direction;
+    public void setDirection(Direction nyretning) {
+        this.direction = nyretning;
+        if (nyretning == Direction.DOWN) {
+            this.shape.setWidth(CAR_WIDTH);
+            this.shape.setHeight(CAR_HEIGHT);
+        }
+        if (nyretning == Direction.RIGHT) {
+            this.shape.setWidth(CAR_HEIGHT);
+            this.shape.setHeight(CAR_WIDTH);
+        }
+        if (nyretning == Direction.UP) {
+            this.shape.setWidth(CAR_WIDTH);
+            this.shape.setHeight(CAR_HEIGHT);
+        }
+        if (nyretning == Direction.LEFT) {
+            this.shape.setWidth(CAR_HEIGHT);
+            this.shape.setHeight(CAR_WIDTH);
+        }
+
     }
 
-    public void moveCar(double speed) {
+    public void moveCar(double fart) {
 
         switch (direction) {
             case UP:
-                y += -speed;
+                y += -fart;
                 break;
             case RIGHT:
-                x += speed;
-                shape.setWidth(CAR_HEIGHT);
-                shape.setHeight(CAR_WIDTH);
+                x += fart;
+
                 break;
             case DOWN:
-                y += speed;
+                y += fart;
                 break;
             case LEFT:
-                x += -speed;
-                shape.setWidth(CAR_HEIGHT);
-                shape.setHeight(CAR_WIDTH);
+                x += -fart;
+
                 break;
             default:
                 break;
@@ -144,44 +181,40 @@ class Car extends Rectangle implements Runnable {
     }
 
     public void outOfBoundsCheck() {
-        // TODO fjern fra skjerm
         if (x > 600) {
             Main.carList.remove(this);
             Main.deleteCar(this);
         }
-        if (x < 0) {
+        if (x < -50) {
             Main.carList.remove(this);
             Main.deleteCar(this);
         }
-        if (y > 800) {
+        if (y > 850) {
             Main.carList.remove(this);
             Main.deleteCar(this);
         }
-        if (y < 0) {
+        if (y < -50) {
             Main.carList.remove(this);
             Main.deleteCar(this);
         }
     }
 
     private double calculateDistance(Car car1, Car car2) {
-        return Math.sqrt(Math.pow(car1.x() - car2.x(), 2) +
-                Math.pow(car1.y() - car2.y(), 2));
+        return Math.sqrt(Math.pow(car1.getX() - car2.getX(), 2) +
+                Math.pow(car1.getY() - car2.getY(), 2));
     }
 
     /** logikk for kjøring */
     private void drivingLogic() {
         lightCheck();
         outOfBoundsCheck();
+
         Car frontCar = findFrontCar();
         findFrontCross();
         double avstand;
-        // Check if approaching intersection
         boolean isApproaching = false;
-        double distToCross = Double.MAX_VALUE;
 
         if (currentIntersection != null) {
-
-            distToCross = calculateDistance(currentIntersection, this);
             isApproaching = switch (direction) {
                 case RIGHT -> currentIntersection.getX() > midtX;
                 case LEFT -> currentIntersection.getX() < midtX;
@@ -195,45 +228,99 @@ class Car extends Rectangle implements Runnable {
             if (avstand <= 60) {
                 System.out.println("avstand: " + avstand);
                 setSpeed(Speed.STOP);
-
+                return;
             } else if (avstand <= 100) {
                 System.out.println("avstand: " + avstand);
                 setSpeed(Speed.LOW);
+                return;
             } else {
                 setSpeed(Speed.HIGH);
             }
         } else {
-
             if (currentIntersection != null) {
-                Rectangle zone = currentIntersection.getStopZone();
-                Bounds carBounds = this.localToScene(this.getBoundsInLocal());
-                Bounds zoneBounds = zone.localToScene(zone.getBoundsInLocal());
+                Rectangle noStopzone = currentIntersection.getnoStopZone();
+                Rectangle rslowZone = currentIntersection.getSlowZone();
+                Rectangle rstopZone = currentIntersection.getStopZone();
+                Rectangle turnZone = currentIntersection.getTurnZone();
 
-                // Always drive if inside the stop zone
+                Bounds carBounds = this.shape.localToParent(this.shape.getBoundsInLocal());
+                Bounds zoneBounds = noStopzone.localToParent(noStopzone.getBoundsInLocal());
+                Bounds stopZone = rstopZone.localToParent(rstopZone.getBoundsInLocal());
+                Bounds slowZone = rslowZone.localToParent(rslowZone.getBoundsInLocal());
+                Bounds centerBounds = turnZone.localToParent(turnZone.getBoundsInLocal());
+
+                // 🔄 Turn only once while in center
+                if (carBounds.intersects(centerBounds)) {
+                    if (!hasTurned) {
+                        Direction newDirection = Direction.randomDirectionExcludingOpposite(direction);
+                        // finner en ny retning(eksluder nåverende retning)
+                        setDirection(newDirection);
+                        // setter ny direction(håndterer også flipping av biler)
+                        System.out.println("endret retning til" + newDirection);
+                        switch (newDirection) {
+                            case Direction.RIGHT -> {
+                                // Moving to the right — snap to one of the right-going lanes
+                                this.y = (y < 170 ? Main.laneHøyreOppe : Main.laneHøyreNede);
+                                this.x = (currentIntersection.getX() + 20);
+                                setSpeed(Speed.HIGH);
+                                return;
+                            }
+                            case Direction.LEFT -> {
+                                // Moving to the left — snap to one of the left-going lane
+                                this.y = (y < 170 ? Main.laneVenstreOppe : Main.laneVenstreNede);
+                                this.x = (currentIntersection.getX() - 80);
+                                setSpeed(Speed.HIGH);
+                                return;
+                            }
+                            case Direction.DOWN -> {
+                                // Moving down — snap to one of the down-going lanes
+                                this.x = (x < 170 ? Main.laneNedoverVenstre : Main.laneNedoverHøyre);
+                                this.y = (currentIntersection.getY() + 80);
+                                setSpeed(Speed.HIGH);
+                                return;
+                            }
+                            case Direction.UP -> {
+                                // Moving up — snap to one of the up-going lanes
+                                this.x = (x < 170 ? Main.laneOppoverVenstre : Main.laneOppoverHøyre);
+                                this.y = (currentIntersection.getY() - 80);
+                                setSpeed(Speed.HIGH);
+                                return;
+                            }
+                        }
+                        setSpeed(Speed.HIGH);
+                        hasTurned = true;
+
+                    }
+                } else {
+                    hasTurned = false; // Reset once outside center
+                }
+
+                // Always drive if inside the no-stop zone
                 if (carBounds.intersects(zoneBounds)) {
+                    System.out.println("bilen er i ikkestoppzone");
                     setSpeed(Speed.HIGH);
                     return;
                 }
 
-                if (rødt && isApproaching) {
-                    if (distToCross >= 65 && distToCross <= 75) {
+                if ((rødt || gult) && isApproaching) {
+                    if (carBounds.intersects(stopZone)) {
                         setSpeed(Speed.STOP);
-                    } else if (distToCross <= 100) {
+                        System.out.println("bilen er i stoppzone");
+                        return;
+                    } else if (carBounds.intersects(slowZone)) {
+                        System.out.println("bilen er i slowZone");
                         setSpeed(Speed.LOW);
-                    }
-                }
-
-                if (gult && isApproaching) {
-                    if (distToCross <= 65 && distToCross <= 75) {
-                        setSpeed(Speed.STOP);
-                    } else if (distToCross < 100) {
-                        setSpeed(Speed.LOW);
+                        return;
                     }
                 }
             }
         }
-        if (frontCar == null && !rødt && !gult) {
+
+        if (!rødt && !gult)
+
+        {
             setSpeed(Speed.HIGH);
+            System.out.println("bilen har ingen hindringer");
         }
     }
 
@@ -300,16 +387,6 @@ class Car extends Rectangle implements Runnable {
         return speed;
     }
 
-    /** get metode for x */
-    public double x() {
-        return x;
-    }
-
-    /** get metode for y */
-    public double y() {
-        return y;
-    }
-
     /**
      * finner bilen foran
      * 
@@ -321,13 +398,13 @@ class Car extends Rectangle implements Runnable {
                 .filter(car -> {
                     switch (direction) {
                         case RIGHT:
-                            return Math.abs(car.y() - y) < 5 && car.x() > x;
+                            return Math.abs(car.getY() - y) < 5 && car.getX() > x;
                         case LEFT:
-                            return Math.abs(car.y() - y) < 5 && car.x() < x;
+                            return Math.abs(car.getY() - y) < 5 && car.getX() < x;
                         case UP:
-                            return Math.abs(car.x() - x) < 5 && car.y() < y;
+                            return Math.abs(car.getX() - x) < 5 && car.getY() < y;
                         case DOWN:
-                            return Math.abs(car.x() - x) < 5 && car.y() > y;
+                            return Math.abs(car.getX() - x) < 5 && car.getY() > y;
                         default:
                             return false;
                     }
