@@ -21,11 +21,6 @@ import javafx.scene.shape.Rectangle;
 import javafx.stage.Stage;
 import javafx.util.Duration;
 
-//lyskryss sjekker for nærmeste bil, gir beskejed om nedbremsing/stopping.
-//gul lys, er en buffer som gir bilen tid til å kommme ut av krysset
-//car.setspeed(int newspeed) går gradvis til den nye farten, brukes for nedbremsing og starting 
-//nedbremsingshastighet avhenger av distansen mellom bil og kryss, må også ha en limit på minste avstand før bremsing
-
 public class Main extends Application {
     private HBox biler = new HBox(10);
     public static List<Car> carList = new ArrayList<Car>();

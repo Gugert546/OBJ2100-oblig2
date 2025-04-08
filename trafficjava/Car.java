@@ -40,8 +40,18 @@ class Car extends Rectangle implements Runnable {
         }
     }
 
-    enum Speed {
-        LOW, STOP, HIGH
+    public enum Speed {
+        STOP(0), LOW(1), HIGH(3);
+
+        private final int value;
+
+        Speed(int value) {
+            this.value = value;
+        }
+
+        public int getValue() {
+            return value;
+        }
     }
 
     public Speed speed;
@@ -68,13 +78,14 @@ class Car extends Rectangle implements Runnable {
     public Car(double x, double y, Direction direction) {
         this.x = x;
         this.y = y;
-        this.direction = direction;
+        setSpeed(Speed.LOW);
         this.shape = new Rectangle(CAR_WIDTH, CAR_HEIGHT, setRandomColor());
         this.color = shape.getFill();
         System.err.println("bilokject lagd med x" + x + "y" + y);
         this.shape.setX(x);
         this.shape.setY(y);
         Thread car = new Thread(this);
+        setDirection(direction);
         car.start();
 
     }
@@ -112,23 +123,8 @@ class Car extends Rectangle implements Runnable {
         return this.direction;
     }
 
-    public void setSpeed(Speed speed) {
-        switch (speed) {
-            case LOW:
-                moveCar(0.5);
-
-                break;
-            case HIGH:
-                moveCar(maxSpeed);
-
-                break;
-            case STOP:
-                moveCar(0);
-
-                break;
-            default:
-                break;
-        }
+    public void setSpeed(Speed fart) {
+        this.speed = fart;
     }
 
     public Color setRandomColor() {
@@ -158,21 +154,21 @@ class Car extends Rectangle implements Runnable {
 
     }
 
-    public void moveCar(double fart) {
+    public void moveCar() {
 
         switch (direction) {
             case UP:
-                y += -fart;
+                y += -speed.getValue();
                 break;
             case RIGHT:
-                x += fart;
+                x += speed.getValue();
 
                 break;
             case DOWN:
-                y += fart;
+                y += speed.getValue();
                 break;
             case LEFT:
-                x += -fart;
+                x += -speed.getValue();
 
                 break;
             default:
@@ -181,7 +177,7 @@ class Car extends Rectangle implements Runnable {
     }
 
     public void outOfBoundsCheck() {
-        if (x > 600) {
+        if (x > 500) {
             Main.carList.remove(this);
             Main.deleteCar(this);
         }
@@ -210,6 +206,9 @@ class Car extends Rectangle implements Runnable {
         outOfBoundsCheck();
 
         Car frontCar = findFrontCar();
+        if (frontCar != null) {
+            System.out.println("fant bil foran");
+        }
         findFrontCross();
         double avstand;
         boolean isApproaching = false;
@@ -224,6 +223,7 @@ class Car extends Rectangle implements Runnable {
         }
 
         if (frontCar != null) {
+            System.out.println("bil:" + getColor() + "  har bil foran");
             avstand = calculateDistance(this, frontCar);
             if (avstand <= 60) {
                 System.out.println("avstand: " + avstand);
@@ -262,29 +262,25 @@ class Car extends Rectangle implements Runnable {
                                 // Moving to the right — snap to one of the right-going lanes
                                 this.y = (y < 170 ? Main.laneHøyreOppe : Main.laneHøyreNede);
                                 this.x = (currentIntersection.getX() + 20);
-                                setSpeed(Speed.HIGH);
-                                return;
+
                             }
                             case Direction.LEFT -> {
                                 // Moving to the left — snap to one of the left-going lane
                                 this.y = (y < 170 ? Main.laneVenstreOppe : Main.laneVenstreNede);
                                 this.x = (currentIntersection.getX() - 80);
-                                setSpeed(Speed.HIGH);
-                                return;
+
                             }
                             case Direction.DOWN -> {
                                 // Moving down — snap to one of the down-going lanes
                                 this.x = (x < 170 ? Main.laneNedoverVenstre : Main.laneNedoverHøyre);
                                 this.y = (currentIntersection.getY() + 80);
-                                setSpeed(Speed.HIGH);
-                                return;
+
                             }
                             case Direction.UP -> {
                                 // Moving up — snap to one of the up-going lanes
                                 this.x = (x < 170 ? Main.laneOppoverVenstre : Main.laneOppoverHøyre);
                                 this.y = (currentIntersection.getY() - 80);
-                                setSpeed(Speed.HIGH);
-                                return;
+
                             }
                         }
                         setSpeed(Speed.HIGH);
@@ -305,10 +301,10 @@ class Car extends Rectangle implements Runnable {
                 if ((rødt || gult) && isApproaching) {
                     if (carBounds.intersects(stopZone)) {
                         setSpeed(Speed.STOP);
-                        System.out.println("bilen er i stoppzone");
+                        System.out.println(this.color + "bil er i stoppzone");
                         return;
                     } else if (carBounds.intersects(slowZone)) {
-                        System.out.println("bilen er i slowZone");
+                        System.out.println(this.color + "bil er i slowZone");
                         setSpeed(Speed.LOW);
                         return;
                     }
@@ -320,8 +316,9 @@ class Car extends Rectangle implements Runnable {
 
         {
             setSpeed(Speed.HIGH);
-            System.out.println("bilen har ingen hindringer");
+            // System.out.println(this.color + "bil har ingen hindringer");
         }
+
     }
 
     /** sjekker lysets status på krysset foran bilen */
@@ -446,6 +443,7 @@ class Car extends Rectangle implements Runnable {
                 Thread.sleep(100);
                 drivingLogic();
                 updateUI();
+                moveCar();
 
             } catch (InterruptedException e) {
                 e.printStackTrace();
