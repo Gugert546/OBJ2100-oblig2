@@ -48,10 +48,10 @@ public class Main extends Application {
     public static double laneOppoverHøyre = 500 + 3;
 
     // pane
-    Pane TrafficPane;
+    static Pane TrafficPane;
 
     public void start(Stage primaryStage) {
-        this.TrafficPane = drawScreen();
+        Main.TrafficPane = drawScreen();
         Timeline carSpawner = new Timeline(new KeyFrame(Duration.seconds(1), event -> {
             if (carList.size() >= CAR_COUNT)
                 return;
@@ -122,12 +122,12 @@ public class Main extends Application {
             case 8:
                 this.randomDirection = Car.Direction.UP;
                 this.randomX = laneOppoverVenstre;
-                this.randomY = 800;
+                this.randomY = 600;
                 break;
             case 9:
                 this.randomDirection = Car.Direction.UP;
                 this.randomX = laneOppoverHøyre;
-                this.randomY = 800;
+                this.randomY = 600;
 
             default:
                 break;
@@ -236,4 +236,9 @@ public class Main extends Application {
         });
     }
 
+    public static void deleteCar(Car car) {
+        Platform.runLater(() -> {
+            TrafficPane.getChildren().remove(car);
+        });
+    }
 }

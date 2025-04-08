@@ -8,7 +8,7 @@ import javafx.application.Platform;
 import javafx.scene.Group;
 import javafx.scene.effect.Light;
 import javafx.scene.effect.Lighting;
-import javafx.scene.layout.Region;
+
 import javafx.scene.paint.Color;
 import javafx.scene.shape.Circle;
 import javafx.scene.shape.Line;
@@ -24,7 +24,7 @@ public class Cross extends Group {
     // statiske variabler
     private static int lengde = 80; // lengden på veiene i krysset
     private static int width = 60; // bredden på veiene i krysset
-    public static long GTI = 4000; // tiden på lyset i millisekunder
+    public static long GTI = 3000; // tiden på lyset i millisekunder
     public static long yT = 2000; // tiden på gult lys
 
     private Direction state; // hvilken retning som har grønnt lys
@@ -44,7 +44,7 @@ public class Cross extends Group {
     private Lighting rødtlys = new Lighting(redlight);
     private Lighting gultlys = new Lighting(yellowLight);
     // region som biler ikke stopper i
-    private Region stopZone;
+    private Rectangle stopZone;
 
     /**
      * konsturktør for kryss
@@ -57,12 +57,13 @@ public class Cross extends Group {
         this.x = midtX;
         this.y = midtY;
         randomState();
-        // Create the stop zone
-        stopZone = new Region();
-        stopZone.setPrefSize(60, 60); // Adjust size as needed
-        stopZone.setLayoutX(x - 30); // Center the region around the cross
-        stopZone.setLayoutY(y - 30);
+        // Create the stop zone if a car is inside, it will continue even after the
+        // light changes
+        stopZone = new Rectangle(x - 40, y - 40, 80, 80);
         getChildren().add(stopZone);
+
+        stopZone.setFill(Color.BLACK);
+        stopZone.setVisible(true); // or false in production
 
         greenlight.setAzimuth(45);
         greenlight.setElevation(60);
@@ -186,7 +187,7 @@ public class Cross extends Group {
         sirkelvenstre.setFill(Color.WHITE);
         lysvenstre.getChildren().addAll(sirkelvenstre);
         getChildren().addAll(lysvenstre);
-
+        stopZone.toFront();
         setState(state);
         startLys();
     }
@@ -229,7 +230,7 @@ public class Cross extends Group {
     }
 
     /** metode for å få stopZone */
-    public Region getStopZone() {
+    public Rectangle getStopZone() {
         return stopZone;
     }
 

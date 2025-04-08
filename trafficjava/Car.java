@@ -3,7 +3,7 @@ package trafficjava;
 import javafx.scene.shape.Rectangle;
 import java.util.Comparator;
 import javafx.application.Platform;
-import javafx.scene.layout.Region;
+import javafx.geometry.Bounds;
 import javafx.scene.paint.Color;
 import javafx.scene.paint.Paint;
 import java.util.Random;
@@ -147,15 +147,19 @@ class Car extends Rectangle implements Runnable {
         // TODO fjern fra skjerm
         if (x > 600) {
             Main.carList.remove(this);
+            Main.deleteCar(this);
         }
         if (x < 0) {
             Main.carList.remove(this);
+            Main.deleteCar(this);
         }
         if (y > 800) {
             Main.carList.remove(this);
+            Main.deleteCar(this);
         }
         if (y < 0) {
             Main.carList.remove(this);
+            Main.deleteCar(this);
         }
     }
 
@@ -174,9 +178,10 @@ class Car extends Rectangle implements Runnable {
         // Check if approaching intersection
         boolean isApproaching = false;
         double distToCross = Double.MAX_VALUE;
+
         if (currentIntersection != null) {
 
-            distToCross = calculateDistance(currentIntersection, this.midtY, this.midtX);
+            distToCross = calculateDistance(currentIntersection, this);
             isApproaching = switch (direction) {
                 case RIGHT -> currentIntersection.getX() > midtX;
                 case LEFT -> currentIntersection.getX() < midtX;
@@ -191,38 +196,40 @@ class Car extends Rectangle implements Runnable {
                 System.out.println("avstand: " + avstand);
                 setSpeed(Speed.STOP);
 
-            } else if (avstand <= 60) {
+            } else if (avstand <= 100) {
                 System.out.println("avstand: " + avstand);
                 setSpeed(Speed.LOW);
-
-            }
-        }
-
-        if (currentIntersection != null) {
-            Region zone = currentIntersection.getStopZone();
-            if (this.getBoundsInParent().intersects(zone.getBoundsInParent())) {
+            } else {
                 setSpeed(Speed.HIGH);
-            } else if (rødt && isApproaching) {
-                if (distToCross <= 100) {
-                    setSpeed(Speed.STOP);
-                } else if (distToCross <= 150) {
-                    setSpeed(Speed.LOW);
+            }
+        } else {
+
+            if (currentIntersection != null) {
+                Rectangle zone = currentIntersection.getStopZone();
+                Bounds carBounds = this.localToScene(this.getBoundsInLocal());
+                Bounds zoneBounds = zone.localToScene(zone.getBoundsInLocal());
+
+                // Always drive if inside the stop zone
+                if (carBounds.intersects(zoneBounds)) {
+                    setSpeed(Speed.HIGH);
+                    return;
                 }
-            }
-        }
 
-        if (gult && currentIntersection != null) {
+                if (rødt && isApproaching) {
+                    if (distToCross >= 65 && distToCross <= 75) {
+                        setSpeed(Speed.STOP);
+                    } else if (distToCross <= 100) {
+                        setSpeed(Speed.LOW);
+                    }
+                }
 
-            if (distToCross >= 60
-                    && distToCross < 90) {
-                setSpeed(Speed.STOP);
-            }
-            if (distToCross < 60) {
-                setSpeed(Speed.HIGH);
-            }
-            if (distToCross > 90
-                    && distToCross < 120) {
-                setSpeed(Speed.LOW);
+                if (gult && isApproaching) {
+                    if (distToCross <= 65 && distToCross <= 75) {
+                        setSpeed(Speed.STOP);
+                    } else if (distToCross < 100) {
+                        setSpeed(Speed.LOW);
+                    }
+                }
             }
         }
         if (frontCar == null && !rødt && !gult) {
@@ -230,6 +237,7 @@ class Car extends Rectangle implements Runnable {
         }
     }
 
+    /** sjekker lysets status på krysset foran bilen */
     private void lightCheck() {
         if (currentIntersection != null) {
             trafficjava.Cross.Direction lys = currentIntersection.getState();
@@ -244,6 +252,9 @@ class Car extends Rectangle implements Runnable {
         }
     }
 
+    /**
+     * finner nærmeste kryss foran bilen
+     */
     private void findFrontCross() {
 
         this.currentIntersection = Main.crossList.stream()
@@ -284,14 +295,17 @@ class Car extends Rectangle implements Runnable {
 
     }
 
+    /** get metode for fart(i enum datatype) */
     private Speed getSpeed() {
         return speed;
     }
 
+    /** get metode for x */
     public double x() {
         return x;
     }
 
+    /** get metode for y */
     public double y() {
         return y;
     }
@@ -335,6 +349,7 @@ class Car extends Rectangle implements Runnable {
                 .orElse(null);
     }
 
+    /** setter max farten for bilene */
     public static void setMaxSpeed(Integer speed) {
         Car.maxSpeed = speed;
 
@@ -346,6 +361,7 @@ class Car extends Rectangle implements Runnable {
         Platform.runLater(() -> shape.setY(y));
     }
 
+    /** run metode, kjører drivinglocig() og updateUI() */
     @Override
     public void run() {
         while (true) {
@@ -370,9 +386,17 @@ class Car extends Rectangle implements Runnable {
         this.rødt = rødt;
     }
 
-    public static double calculateDistance(Cross cross, int midtY, int midtX) {
-        return Math.sqrt(Math.pow(cross.getX() - midtX, 2) +
-                Math.pow(cross.getY() - midtY, 2));
+    /** kalkulerer avstanden mellom midten av krysset og midten av bilen */
+    public static double calculateDistance(Cross cross, Car car) {
+        return Math.hypot(cross.getX() - car.getMidtX(), cross.getY() - car.getMidtY());
+    }
+
+    private int getMidtY() {
+        return midtY;
+    }
+
+    private int getMidtX() {
+        return midtX;
     }
 
     public void setCurrentIntersection(Cross cross) {
@@ -382,25 +406,5 @@ class Car extends Rectangle implements Runnable {
     public Cross getCurrentIntersection() {
         return currentIntersection;
     }
-    /*
-     * public boolean tryClaimIntersection(Cross intersection) {
-     * if (lock.tryLock()) { // Try to acquire the lock without blocking
-     * try {
-     * if (currentIntersection == null || currentIntersection == intersection) {
-     * currentIntersection = intersection;
-     * return true; // Successfully claimed
-     * }
-     * } finally {
-     * lock.unlock(); // Always unlock
-     * }
-     * }
-     * return false; // Another intersection is controlling the car
-     * }
-     * 
-     * public Cross findClosestIntersection(List<Cross> intersections) {
-     * return intersections.stream()
-     * .min(Comparator.comparingDouble(cross -> Car.calculateDistance(cross, this)))
-     * .orElse(null);
-     * }
-     */
+
 }
