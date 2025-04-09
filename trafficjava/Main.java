@@ -8,16 +8,19 @@ import javafx.animation.KeyFrame;
 import javafx.animation.Timeline;
 import javafx.application.Application;
 import javafx.application.Platform;
+import javafx.geometry.Pos;
 import javafx.scene.Scene;
 import javafx.scene.control.Button;
 import javafx.scene.control.Label;
 import javafx.scene.control.TextField;
 import javafx.scene.layout.HBox;
 import javafx.scene.layout.Pane;
+import javafx.scene.layout.StackPane;
 import javafx.scene.layout.VBox;
 import javafx.scene.paint.Color;
 
 import javafx.scene.shape.Rectangle;
+import javafx.scene.text.Text;
 import javafx.stage.Stage;
 import javafx.util.Duration;
 
@@ -45,6 +48,7 @@ public class Main extends Application {
     // pane
     static Pane TrafficPane;
 
+    /** start metode, spawner biler og setter stagen */
     public void start(Stage primaryStage) {
         Main.TrafficPane = drawScreen();
         Timeline carSpawner = new Timeline(new KeyFrame(Duration.seconds(1), event -> {
@@ -61,7 +65,12 @@ public class Main extends Application {
         }));
         carSpawner.setCycleCount(Timeline.INDEFINITE); // fortsetter å spawne hele tiden
         carSpawner.play(); // Start the spawning timeline
-
+        Timeline guiUpdater = new Timeline(new KeyFrame(Duration.seconds(1), event -> {
+            updateGUI();
+        }));
+        guiUpdater.setCycleCount(Timeline.INDEFINITE);
+        guiUpdater.play();
+        TrafficPane.getChildren().add(biler);
         Scene trafficSim = new Scene(TrafficPane, 800, 600);
         primaryStage.setTitle("traffic sim");
         primaryStage.setScene(trafficSim);
@@ -70,11 +79,13 @@ public class Main extends Application {
 
     }
 
+    /** main metode */
     public static void main(String[] args) {
         Application.launch(args);
 
     }
 
+    /** metode for å sette en tilfeldig spawn lokasjon til bilen */
     private void setTilfeldigSpawn() {
         Random random = new Random();
         int tall = random.nextInt(9) + 1;
@@ -130,6 +141,7 @@ public class Main extends Application {
 
     }
 
+    /** metode for å tegne veisystemet, lager også kryss objekter */
     public Pane drawScreen() {
         Pane pane = new Pane();
 
@@ -210,20 +222,49 @@ public class Main extends Application {
         return pane;
     }
 
+    /**
+     * metode for å tegne bil ui, tegner Rectangle med bilens farge og farten
+     * printet oppå
+     */
     public void drawCarGui() {
         biler.getChildren().clear();
+        VBox vbox = new VBox(10); // VBox to contain multiple rows of cars
+        HBox hbox = new HBox(10); // HBox to hold a row of up to 4 cars
+
+        int maxCarsPerRow = 4; // Maximum number of cars in a row
+
         for (Car car : carList) {
             Rectangle bil = new Rectangle();
+            Text tekst = new Text("speed is: \n" + " " + car.speed);
+
             bil.setWidth(20);
             bil.setHeight(40);
             bil.setFill(car.getColor());
-            this.biler.getChildren().add(bil);
+
+            StackPane bilPane = new StackPane(bil, tekst);
+            tekst.setStyle("-fx-font-size: 10px; -fx-font-weight: bold;");
+            StackPane.setAlignment(tekst, Pos.CENTER);
+
+            // If the current HBox has 4 cars, add it to the VBox and create a new HBox
+            if (hbox.getChildren().size() >= maxCarsPerRow) {
+                vbox.getChildren().add(hbox); // Add current HBox to VBox
+                hbox = new HBox(10); // Create a new HBox for the next row
+            }
+
+            hbox.getChildren().add(bilPane); // Add car to the current row (HBox)
         }
-        biler.setLayoutX(600);
-        biler.setLayoutY(450);
-        TrafficPane.getChildren().addAll(biler);
+
+        // Add the last HBox to the VBox if there are cars left in it
+        if (!hbox.getChildren().isEmpty()) {
+            vbox.getChildren().add(hbox);
+        }
+
+        this.biler.getChildren().add(vbox); // Add the VBox to the main container
+        this.biler.setLayoutX(600);
+        this.biler.setLayoutY(450);
     }
 
+    /** metode for å oppdatere ui */
     public void updateGUI() {
         Platform.runLater(() -> {
             drawCarGui();
@@ -231,9 +272,11 @@ public class Main extends Application {
         });
     }
 
+    /** metode for å slette bilene fra trafficpane */
     public static void deleteCar(Car car) {
         Platform.runLater(() -> {
             TrafficPane.getChildren().remove(car);
         });
     }
+
 }

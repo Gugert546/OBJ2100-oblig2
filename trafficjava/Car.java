@@ -57,8 +57,6 @@ class Car extends Rectangle implements Runnable {
     public Speed speed;
     public static final int CAR_WIDTH = 24;
     public static final int CAR_HEIGHT = 50;
-    private int midtY = CAR_WIDTH / 2;
-    private int midtX = CAR_HEIGHT / 2;
 
     public static int maxSpeed = 3;
 
@@ -72,14 +70,26 @@ class Car extends Rectangle implements Runnable {
     private boolean rødt; // rødt lys, true for rødt, false for grønt.
     private boolean gult; // gult lys, true for gult, false for ikke gult
     private boolean hasTurned = false;
-
+    // krysset foran bilen, settes av findFrontcross()
     private Cross currentIntersection;
 
+    /**
+     * konstruktør for bil, lager en bil(Rectangle), setter x og y, og starter å
+     * kjøre
+     * hver bil kjører i en egen tråd
+     *
+     * 
+     * @param x         x-verdien til bilen
+     * @param y         y-verdien til bilen
+     * @param direction hvilken retning bilen starter å kjøre, settes til enum
+     *                  Direction
+     */
     public Car(double x, double y, Direction direction) {
         this.x = x;
         this.y = y;
         setSpeed(Speed.LOW);
         this.shape = new Rectangle(CAR_WIDTH, CAR_HEIGHT, setRandomColor());
+        this.shape.setStroke(Color.BLACK);
         this.color = shape.getFill();
         System.err.println("bilokject lagd med x" + x + "y" + y);
         this.shape.setX(x);
@@ -90,49 +100,58 @@ class Car extends Rectangle implements Runnable {
 
     }
 
+    /**
+     * get metode for å få formen til bilen
+     * 
+     * @return Rectangle
+     */
     public Rectangle getShape() {
         return shape;
     }
 
+    /**
+     * get metode for å få fargen til bilen
+     * 
+     * @return Paint
+     */
     public Paint getColor() {
         return color;
     }
 
-    public int getintDirection() {
-        int intDirection = 0;
-        switch (direction) {
-            case UP:
-                intDirection = 3;
-                break;
-            case RIGHT:
-                intDirection = 1;
-                break;
-            case DOWN:
-                intDirection = 4;
-                break;
-            case LEFT:
-                intDirection = 2;
-                break;
-            default:
-                break;
-        }
-        return intDirection;
-    }
-
+    /**
+     * get metode for å få retningen bilen kjører
+     * 
+     * @return Direction enum over retninger
+     */
     public Direction getDirection() {
         return this.direction;
     }
 
+    /**
+     * set metode for farten
+     * 
+     * @param fart Speed enum,stop,low,high
+     */
     public void setSpeed(Speed fart) {
         this.speed = fart;
     }
 
+    /**
+     * metode for å få en tilfeldig farge
+     * 
+     * @return Color
+     */
     public Color setRandomColor() {
         Random random = new Random();
         Color color = Color.rgb(random.nextInt(256), random.nextInt(256), random.nextInt(256));
         return color;
     }
 
+    /**
+     * set metode for retning, roterer også bilen
+     * 
+     * @param nyretning Direction enum, nye retningen
+     */
     public void setDirection(Direction nyretning) {
         this.direction = nyretning;
         if (nyretning == Direction.DOWN) {
@@ -154,6 +173,10 @@ class Car extends Rectangle implements Runnable {
 
     }
 
+    /**
+     * metode for å flytte bilen, kjøres i run() flytter bilen basert på verdien i
+     * speed(enum)
+     */
     public void moveCar() {
 
         switch (direction) {
@@ -176,31 +199,40 @@ class Car extends Rectangle implements Runnable {
         }
     }
 
+    /**
+     * sjekker om bilen er utenfor skjermen,kjøres i drivingLogic
+     * sletter også bilene fra carList, og fjerner de fra skjermen
+     */
     public void outOfBoundsCheck() {
         if (x > 600) {
             Main.carList.remove(this);
             Main.deleteCar(this);
+            this.shape.setVisible(false);
         }
         if (x < -50) {
             Main.carList.remove(this);
             Main.deleteCar(this);
+            this.shape.setVisible(false);
         }
         if (y > 750) {
             Main.carList.remove(this);
             Main.deleteCar(this);
+            this.shape.setVisible(false);
         }
         if (y < -50) {
             Main.carList.remove(this);
             Main.deleteCar(this);
+            this.shape.setVisible(false);
         }
     }
 
+    /** kalkulerer distansen mellom to bil objekter */
     private double calculateDistance(Car car1, Car car2) {
         return Math.sqrt(Math.pow(car1.x - car2.x, 2) +
                 Math.pow(car1.y - car2.y, 2));
     }
 
-    /** logikk for kjøring */
+    /** logikk for kjøring,kjøres fra run() */
     private void drivingLogic() {
         lightCheck();
         outOfBoundsCheck();
@@ -235,7 +267,7 @@ class Car extends Rectangle implements Runnable {
                         case Direction.LEFT -> {
                             // Moving to the left — snap to one of the left-going lane
                             this.y = (y < 170 ? Main.laneVenstreOppe : Main.laneVenstreNede);
-                            this.x = (currentIntersection.getX() - 70);
+                            this.x = (currentIntersection.getX() - 55);
 
                         }
                         case Direction.DOWN -> {
@@ -247,7 +279,7 @@ class Car extends Rectangle implements Runnable {
                         case Direction.UP -> {
                             // Moving up — snap to one of the up-going lanes
                             this.x = (x < 170 ? Main.laneOppoverVenstre : Main.laneOppoverHøyre);
-                            this.y = (currentIntersection.getY() - 60);
+                            this.y = (currentIntersection.getY() - 50);
 
                         }
                     }
@@ -426,7 +458,11 @@ class Car extends Rectangle implements Runnable {
                 .orElse(null);
     }
 
-    /** setter max farten for bilene */
+    /**
+     * setter max farten for bilene
+     * 
+     * @param speed int
+     */
     public static void setMaxSpeed(Integer speed) {
         Car.maxSpeed = speed;
 
@@ -464,23 +500,16 @@ class Car extends Rectangle implements Runnable {
         this.rødt = rødt;
     }
 
-    /** kalkulerer avstanden mellom midten av krysset og midten av bilen */
-    public static double calculateDistance(Cross cross, Car car) {
-        return Math.hypot(cross.getX() - car.getMidtX(), cross.getY() - car.getMidtY());
-    }
-
-    private int getMidtY() {
-        return midtY;
-    }
-
-    private int getMidtX() {
-        return midtX;
-    }
-
+    /**
+     * set metode for currentIntersection
+     * 
+     * @param cross Cross objekt
+     */
     public void setCurrentIntersection(Cross cross) {
         this.currentIntersection = cross;
     }
 
+    /** get metode for currentIntersection */
     public Cross getCurrentIntersection() {
         return currentIntersection;
     }
