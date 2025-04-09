@@ -79,7 +79,7 @@ public class Cross extends Group {
         getChildren().add(slowZone);
         getChildren().add(noStopZone);
         getChildren().add(stopZone);
-        turnZone.setVisible(true);// debug
+        turnZone.setVisible(false);// debug
         turnZone.setFill(Color.BLACK);
         stopZone.setVisible(false); // debug
         noStopZone.setFill(Color.BLACK);
