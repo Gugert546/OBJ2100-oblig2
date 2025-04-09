@@ -1,47 +1,56 @@
 package trafficjava;
 
-import java.util.List;
 import java.util.Random;
 
+import javafx.animation.KeyFrame;
+import javafx.animation.Timeline;
 import javafx.application.Platform;
 import javafx.scene.Group;
 import javafx.scene.effect.Light;
 import javafx.scene.effect.Lighting;
-import javafx.scene.layout.Pane;
+
 import javafx.scene.paint.Color;
 import javafx.scene.shape.Circle;
 import javafx.scene.shape.Line;
 import javafx.scene.shape.Rectangle;
+import javafx.util.Duration;
 
-public class Cross extends Group implements Runnable {
+public class Cross extends Group {
+
     public enum Direction {
         RIGHT, LEFT, UP, DOWN
     }
 
-    private Direction state;
-    private static int GTI = 1000;
-    Pane gui = new Pane();
-    int lengde = 40;
-    private int width = 40;
-    int x, y;
-    private int lysBredde = 20;
-    private int lysLengde = 25;
-    private int radius = 5;
-    public Circle sirkelopp;
-    public Circle sirkelhøyre;
-    public Circle sirkelvenstre;
-    public Circle sirkelned;
+    // statiske variabler
+    private static int lengde = 80; // lengden på veiene i krysset
+    private static int width = 60; // bredden på veiene i krysset
+    public static long GTI = 3000; // tiden på lyset i millisekunder
+    public static long yT = 2000; // tiden på gult lys
+
+    private Direction state; // hvilken retning som har grønnt lys
+    // farge på lys
+
+    // lys-variabler
+    private int x, y; // x og y posisjonen til krysset
+    private int lysBredde = width / 3; // bredden på rektangelet rundt lysene
+    private int lysLengde = 25; // lengden på rektangelet rundt lysene
+    private int radius = 5; // radius på sirkelen som representerer lyset
+    public Circle sirkelopp, sirkelhøyre, sirkelvenstre, sirkelned; // sirkel objekt til kryssene
+    // lys i lampene
     private Light.Distant greenlight = new Light.Distant();
     private Light.Distant redlight = new Light.Distant();
-
-    // findFrontCar
-    Car nearCarUP = null;
-    Car nearCarDWN = null;
-    Car nearCarLFT = null;
-    Car nearCarRIGHT = null;
-
+    private Light.Distant yellowLight = new Light.Distant();
     private Lighting grøntlys = new Lighting(greenlight);
     private Lighting rødtlys = new Lighting(redlight);
+    private Lighting gultlys = new Lighting(yellowLight);
+    // region som biler ikke stopper i
+    private Rectangle noStopZone;
+    // region som biler stopper i
+    private Rectangle stopZone;
+    // region som biler kjører sakte i
+    private Rectangle slowZone;
+    // region som biler svinger i
+    private Rectangle turnZone;
 
     /**
      * konsturktør for kryss
@@ -50,15 +59,41 @@ public class Cross extends Group implements Runnable {
      * @param y start y posisjon,midt i krysset
      */
     public Cross(int midtX, int midtY) {
+
         this.x = midtX;
         this.y = midtY;
-        this.state = Direction.RIGHT;
+        randomState();
+        // Create the no stop zone if a car is inside, it will continue even after the
+        // light changes
+        noStopZone = new Rectangle(x - 40, y - 40, 80, 80);
+        // create a stop zone, where cars will stop if the light is red
+        stopZone = new Rectangle(x - 80, y - 80, 160, 160);
+        stopZone.setFill(Color.YELLOW);
+        // create a slow zone, where cars will be slowed
+        slowZone = new Rectangle(x - 140, y - 140, 280, 280);
+        slowZone.setFill(Color.ALICEBLUE);
+        slowZone.setVisible(false);
+        // create a turn zone,where cars will get a new direction
+        turnZone = new Rectangle(x - 10, y - 10, 20, 20);
+        getChildren().add(turnZone);
+        getChildren().add(slowZone);
+        getChildren().add(noStopZone);
+        getChildren().add(stopZone);
+        turnZone.setVisible(false);// debug
+        turnZone.setFill(Color.BLACK);
+        stopZone.setVisible(false); // debug
+        noStopZone.setFill(Color.BLACK);
+        noStopZone.setVisible(false); // or false in production
+
         greenlight.setAzimuth(45);
         greenlight.setElevation(60);
         greenlight.setColor(Color.LIGHTGREEN);
         redlight.setAzimuth(45);
         redlight.setElevation(60);
         redlight.setColor(Color.RED);
+        yellowLight.setAzimuth(45);
+        yellowLight.setElevation(60);
+        yellowLight.setColor(Color.YELLOW);
         // varibler for roadmarkings
         int xtilvenstre = x - (width / 2);
         int yoppover = y - (width / 2);
@@ -172,9 +207,33 @@ public class Cross extends Group implements Runnable {
         sirkelvenstre.setFill(Color.WHITE);
         lysvenstre.getChildren().addAll(sirkelvenstre);
         getChildren().addAll(lysvenstre);
+        turnZone.toFront();
+        stopZone.toFront();
+        noStopZone.toFront();
+        slowZone.toFront();
+        setState(state);
+        startLys();
+    }
 
-        Thread cross = new Thread(this);
-        cross.start();
+    /** setter en tilfeldig retning på lyset */
+    private void randomState() {
+        Random random = new Random();
+        int tall = random.nextInt(4) + 1;
+        switch (tall) {
+            case 1:
+                this.state = Direction.UP;
+                break;
+            case 2:
+                this.state = Direction.DOWN;
+                break;
+            case 3:
+                this.state = Direction.LEFT;
+                break;
+            case 4:
+                this.state = Direction.RIGHT;
+                break;
+
+        }
     }
 
     /** metode for å få x posisjonen til krysset(midt i) */
@@ -188,39 +247,18 @@ public class Cross extends Group implements Runnable {
         return y;
     }
 
-    /** metode for å sette bredden på veien/krysset */
-    public void setWidth(int width) {
-        this.width = width;
-    }
-
     /** metode for å få bredden på veien/veien i krysset */
-    public int getWidth() {
+    public static int getWidth() {
         return width;
     }
 
-    /** metode for å sette lengden på veien i krysset */
-    public void setLength(int lenght) {
-        this.lengde = lenght;
-    }
-
-    /** metode for å få lengden på veien i krysset */
-    public int getLength() {
-        return lengde;
-    }
-
     /**
-     * metode for å få en tilfeldig ny retning
+     * metode for å få lengden på veien i krysset
      * 
-     * @param direction settes til retningen bilen kjører(Car.getDirection())
+     * @return int
      */
-    public int newDirection(int direction) {
-        int retning;
-        Random random = new Random();
-        do {
-            retning = random.nextInt(4) + 1;
-        } while (retning == direction);
-        return retning;
-
+    public static int getLength() {
+        return lengde;
     }
 
     /** metode for å sette state til lysene */
@@ -229,157 +267,203 @@ public class Cross extends Group implements Runnable {
         updateColor();
     }
 
-    /** metode for lys til høyre */
-    private void høyre() {
-        sirkelhøyre.setFill(Color.GREEN);
-        sirkelhøyre.setEffect(grøntlys);
-        sirkelned.setFill(Color.RED);
-        sirkelned.setEffect(rødtlys);
-        sirkelopp.setFill(Color.RED);
-        sirkelopp.setEffect(rødtlys);
-        sirkelvenstre.setFill(Color.RED);
-        sirkelvenstre.setEffect(rødtlys);
-
+    /**
+     * get merode for staten til lyset
+     * 
+     * @return Diretion enum
+     */
+    public Direction getState() {
+        return this.state;
     }
 
-    /** metode for lys til venstre */
-    private void venstre() {
-
-        sirkelhøyre.setFill(Color.RED);
-        sirkelhøyre.setEffect(rødtlys);
-        sirkelned.setFill(Color.RED);
-        sirkelned.setEffect(rødtlys);
-        sirkelopp.setFill(Color.RED);
-        sirkelopp.setEffect(rødtlys);
-        sirkelvenstre.setFill(Color.GREEN);
-        sirkelvenstre.setEffect(grøntlys);
-
-    }
-
-    /** metode for lys oppover */
-    private void opp() {
-
-        sirkelhøyre.setFill(Color.RED);
-        sirkelhøyre.setEffect(rødtlys);
-        sirkelned.setFill(Color.RED);
-        sirkelned.setEffect(rødtlys);
-        sirkelopp.setFill(Color.GREEN);
-        sirkelopp.setEffect(grøntlys);
-        sirkelvenstre.setFill(Color.RED);
-        sirkelvenstre.setEffect(rødtlys);
-
-    }
-
-    /** metode for lys ned */
-    private void ned() {
-
-        sirkelhøyre.setFill(Color.RED);
-        sirkelhøyre.setEffect(rødtlys);
-        sirkelned.setFill(Color.GREEN);
-        sirkelned.setEffect(grøntlys);
-        sirkelopp.setFill(Color.RED);
-        sirkelopp.setEffect(rødtlys);
-        sirkelvenstre.setFill(Color.RED);
-        sirkelvenstre.setEffect(rødtlys);
-
-    }
-
-    public void findFrontCar(List<Car> bilListe) {
-        int HøyrelaneY = y - 5;
-        int VenstrelaneY = y + 5;
-        int OppLaneX = x - 5;
-        int NedLaneX = x + 5;
-
-        // går igjennom alle biler, finner den nærmeste i hver retning, lagres i
-        // variabler
-        // to-do
-        // hvordan gi beskjed til nærmeste bil om status til lyset
-        for (Car car : carList) {
-            // bil fra høyre ->
-            if (car.getDirection() == trafficjava.Car.Direction.RIGHT && car.getY() == HøyrelaneY && car.getX() < x) {
-                // hvis bilen kjører til høyre OG bilens y pos er lik den til lanen OG bilens x
-                // posisjon er mindre en kryssets
-                if (nearCarRIGHT == null || Math.abs(car.getX() - x) < Math.abs(nearCarRIGHT.getX() - x)) {
-                    this.nearCarRIGHT = car;
-                }
-                // bil fra venstre
-                if (car.getDirection() == trafficjava.Car.Direction.LEFT && car.getY() == VenstrelaneY
-                        && car.getX() > x) {
-                    if (nearCarLFT == null || Math.abs(car.getX() - x) > Math.abs(nearCarLFT.getX() - x)) {
-                        this.nearCarLFT = car;
-                    }
-                }
-                // bil ovenfra
-                if (car.getDirection() == trafficjava.Car.Direction.UP && car.getX() == OppLaneX && car.getY() < y) {
-                    if (nearCarUP == null || Math.abs(car.getY() - y) < Math.abs(nearCarUP.getY() - y)) {
-                        this.nearCarUP = car;
-                    }
-                }
-                // bil nedenfra
-                if (car.getDirection() == trafficjava.Car.Direction.DOWN && car.getX() == NedLaneX && car.getY() > y) {
-                    if (nearCarDWN == null || Math.abs(car.getY() - y) > Math.abs(nearCarDWN.getY() - y)) {
-                        this.nearCarDWN = car;
-                    }
-                }
-            }
-        }
-    }
-
-    private void updateColor() {
+    /** metode for å sette gult lys */
+    private void gult() {
         Platform.runLater(() -> {
             switch (state) {
                 case RIGHT:
-                    høyre();
+                    sirkelhøyre.setFill(Color.YELLOW);
+                    sirkelhøyre.setEffect(gultlys);
+                    sirkelned.setFill(Color.RED);
+                    sirkelned.setEffect(rødtlys);
+                    sirkelopp.setFill(Color.RED);
+                    sirkelopp.setEffect(rødtlys);
+                    sirkelvenstre.setFill(Color.RED);
+                    sirkelvenstre.setEffect(rødtlys);
                     break;
                 case LEFT:
-                    venstre();
+                    sirkelhøyre.setFill(Color.RED);
+                    sirkelhøyre.setEffect(rødtlys);
+                    sirkelned.setFill(Color.RED);
+                    sirkelned.setEffect(rødtlys);
+                    sirkelopp.setFill(Color.RED);
+                    sirkelopp.setEffect(rødtlys);
+                    sirkelvenstre.setFill(Color.YELLOW);
+                    sirkelvenstre.setEffect(gultlys);
                     break;
                 case UP:
-                    opp();
+                    sirkelhøyre.setFill(Color.RED);
+                    sirkelhøyre.setEffect(rødtlys);
+                    sirkelned.setFill(Color.RED);
+                    sirkelned.setEffect(rødtlys);
+                    sirkelopp.setFill(Color.YELLOW);
+                    sirkelopp.setEffect(gultlys);
+                    sirkelvenstre.setFill(Color.RED);
+                    sirkelvenstre.setEffect(rødtlys);
+
                     break;
                 case DOWN:
-                    ned();
+                    sirkelhøyre.setFill(Color.RED);
+                    sirkelhøyre.setEffect(rødtlys);
+                    sirkelned.setFill(Color.YELLOW);
+                    sirkelned.setEffect(gultlys);
+                    sirkelopp.setFill(Color.RED);
+                    sirkelopp.setEffect(rødtlys);
+                    sirkelvenstre.setFill(Color.RED);
+                    sirkelvenstre.setEffect(rødtlys);
+
                     break;
+
                 default:
-                    break;
             }
         });
     }
 
-    private void gul() {
-        ;
+    /** oppdater fargene til lysene på ui tråden */
+    private void updateColor() {
+        Platform.runLater(() -> {
+            switch (state) {
+                case RIGHT:
+                    sirkelhøyre.setFill(Color.GREEN);
+                    sirkelhøyre.setEffect(grøntlys);
+                    sirkelned.setFill(Color.RED);
+                    sirkelned.setEffect(rødtlys);
+                    sirkelopp.setFill(Color.RED);
+                    sirkelopp.setEffect(rødtlys);
+                    sirkelvenstre.setFill(Color.RED);
+                    sirkelvenstre.setEffect(rødtlys);
+                    break;
+                case LEFT:
+                    sirkelhøyre.setFill(Color.RED);
+                    sirkelhøyre.setEffect(rødtlys);
+                    sirkelned.setFill(Color.RED);
+                    sirkelned.setEffect(rødtlys);
+                    sirkelopp.setFill(Color.RED);
+                    sirkelopp.setEffect(rødtlys);
+                    sirkelvenstre.setFill(Color.GREEN);
+                    sirkelvenstre.setEffect(grøntlys);
+                    break;
+                case UP:
+                    sirkelhøyre.setFill(Color.RED);
+                    sirkelhøyre.setEffect(rødtlys);
+                    sirkelned.setFill(Color.RED);
+                    sirkelned.setEffect(rødtlys);
+                    sirkelopp.setFill(Color.GREEN);
+                    sirkelopp.setEffect(grøntlys);
+                    sirkelvenstre.setFill(Color.RED);
+                    sirkelvenstre.setEffect(rødtlys);
+                    break;
+                case DOWN:
+                    sirkelhøyre.setFill(Color.RED);
+                    sirkelhøyre.setEffect(rødtlys);
+                    sirkelned.setFill(Color.GREEN);
+                    sirkelned.setEffect(grøntlys);
+                    sirkelopp.setFill(Color.RED);
+                    sirkelopp.setEffect(rødtlys);
+                    sirkelvenstre.setFill(Color.RED);
+                    sirkelvenstre.setEffect(rødtlys);
+                    break;
+                default:
+                    break;
+
+            }
+        });
     }
 
-    /**
+    /*
      * set tiden for grønt lys
      * 
      * @param tid antall millisekunder
      */
-    public static void setGTI(int tid) {
-        cross.GTI = tid;
+    public static void setGTI(long tid) {
+        Cross.GTI = tid;
         System.out.println("tid på grønt lys er:" + GTI);
     }
 
-    /** run metode, bytter farge på lysene */
-    @Override
-    public void run() {
-        while (true) {
-            try {
-                Thread.sleep(GTI);
-                setState(Direction.LEFT);
-                // legg til state GUL
-                Thread.sleep(GTI);
+    /** metode med logikk for lysene, skal rulere hvilken retning som er grønn */
+    private void lyslogikk() {
+        switch (state) {
+            case LEFT:
                 setState(Direction.UP);
-                Thread.sleep(GTI);
-                setState(Direction.DOWN);
-                Thread.sleep(GTI);
-                setState(Direction.RIGHT);
-
-            } catch (InterruptedException e) {
-                Thread.currentThread().interrupt();
                 break;
-            }
+            case RIGHT:
+                setState(Direction.DOWN);
+                break;
+            case UP:
+                setState(Direction.RIGHT);
+                break;
+            case DOWN:
+                setState(Direction.LEFT);
+                break;
+            default:
+                break;
 
         }
+
+    }
+
+    /**
+     * metode for å starte lysene
+     */
+    private void startLys() {
+        lyslogikk(); // bytt farge på lysene
+        Timeline lightSwitcher = new Timeline(new KeyFrame(Duration.millis(Cross.GTI), event -> startYellowPhase()));
+        lightSwitcher.setCycleCount(1);
+        lightSwitcher.play();
+    }
+
+    /**
+     * metode for å kjøre gule lys
+     */
+    private void startYellowPhase() {
+        gult(); // Turn on yellow light
+        Timeline yellowTimer = new Timeline(new KeyFrame(Duration.millis(yT), event -> startLys()));
+        yellowTimer.setCycleCount(1);
+        yellowTimer.play();
+    }
+
+    /**
+     * get metode for ikke-stopp sonen
+     * 
+     * @return Rectangle
+     */
+    public Rectangle getnoStopZone() {
+        return noStopZone;
+    }
+
+    /**
+     * get metode for sakte sonen
+     * 
+     * @return Rectangle
+     */
+    public Rectangle getSlowZone() {
+        return slowZone;
+    }
+
+    /**
+     * metode for å få stopZone
+     * 
+     * @return Rectangle
+     */
+    public Rectangle getStopZone() {
+        return stopZone;
+    }
+
+    /**
+     * get metode for turnzone
+     * 
+     * @return Rectangle
+     */
+    public Rectangle getTurnZone() {
+        return turnZone;
     }
 }
