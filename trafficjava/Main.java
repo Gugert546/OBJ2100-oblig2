@@ -152,7 +152,14 @@ public class Main extends Application {
         Rectangle guifelt = new Rectangle(600, 30, 200, 540);
         guifelt.setFill(Color.GRAY);
         pane.getChildren().add(guifelt);
-
+        // kanpp for å slette bilene
+        Label sletteTekst = new Label("slett alle bilen");
+        Button slettButton = new Button("slett");
+        slettButton.setOnAction(e -> {
+            // kode for knappen
+            deleteAllcars();
+        });
+        gui.getChildren().addAll(sletteTekst, slettButton);
         // gui for å velge ønsket fart på bilene
         Label Ftekst = new Label("ønsket fart på bilene:" + Car.maxSpeed);
         TextField fart = new TextField();
@@ -197,6 +204,7 @@ public class Main extends Application {
         gui.setLayoutX(610);
         gui.setLayoutY(200);
         pane.getChildren().addAll(gui);
+        gui.toFront();
 
         // kryss og vei
 
@@ -275,8 +283,19 @@ public class Main extends Application {
     /** metode for å slette bilene fra trafficpane */
     public static void deleteCar(Car car) {
         Platform.runLater(() -> {
+
             TrafficPane.getChildren().remove(car);
+
         });
+    }
+
+    public void deleteAllcars() {
+
+        for (Car car : carList) {
+            TrafficPane.getChildren().remove(car.getShape());
+        }
+        carList.clear();
+
     }
 
 }

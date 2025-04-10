@@ -209,7 +209,7 @@ class Car extends Rectangle implements Runnable {
             Main.deleteCar(this);
             this.shape.setVisible(false);
         }
-        if (x < -50) {
+        if (x < -20) {
             Main.carList.remove(this);
             Main.deleteCar(this);
             this.shape.setVisible(false);
@@ -219,7 +219,7 @@ class Car extends Rectangle implements Runnable {
             Main.deleteCar(this);
             this.shape.setVisible(false);
         }
-        if (y < -50) {
+        if (y < -20) {
             Main.carList.remove(this);
             Main.deleteCar(this);
             this.shape.setVisible(false);
@@ -324,6 +324,12 @@ class Car extends Rectangle implements Runnable {
             Bounds carBounds = this.shape.localToParent(this.shape.getBoundsInLocal());
             Bounds stopZone = rstopZone.localToParent(rstopZone.getBoundsInLocal());
             Bounds slowZone = rslowZone.localToParent(rslowZone.getBoundsInLocal());
+            if (gult) {
+                System.out.println("gult lys");
+            }
+            if (rødt) {
+                System.out.println("rødt lys");
+            }
             if (carBounds.intersects(stopZone) && avstand > 100) {
                 setSpeed(Speed.STOP);
                 // System.out.println(this.color + "bil er i stoppzone");
@@ -357,6 +363,11 @@ class Car extends Rectangle implements Runnable {
     /** sjekker lysets status på krysset foran bilen */
     private void lightCheck() {
         if (currentIntersection != null) {
+            if (currentIntersection.getGult()) {
+                yellowLight(true);
+            } else {
+                yellowLight(false);
+            }
             trafficjava.Cross.Direction lys = currentIntersection.getState();
             if (lys == trafficjava.Cross.Direction.RIGHT && this.direction == Direction.LEFT ||
                     lys == trafficjava.Cross.Direction.LEFT && this.direction == Direction.RIGHT ||
@@ -444,13 +455,13 @@ class Car extends Rectangle implements Runnable {
                 .min(Comparator.comparingDouble(car -> {
                     switch (direction) {
                         case RIGHT:
-                            return Math.abs(car.getX() - x);
+                            return car.getX() - x;
                         case LEFT:
-                            return Math.abs(car.getX() - x);
+                            return x - car.getX();
                         case UP:
-                            return Math.abs(car.getY() - y);
+                            return y - car.getY();
                         case DOWN:
-                            return Math.abs(car.getY() - y);
+                            return car.getY() - y;
                         default:
                             return Double.MAX_VALUE;
                     }
@@ -498,6 +509,10 @@ class Car extends Rectangle implements Runnable {
      */
     public void redLight(boolean rødt) {
         this.rødt = rødt;
+    }
+
+    public void yellowLight(Boolean gult) {
+        this.gult = gult;
     }
 
     /**

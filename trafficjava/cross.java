@@ -2,6 +2,8 @@ package trafficjava;
 
 import java.util.Random;
 
+import javax.swing.text.StyledEditorKit.BoldAction;
+
 import javafx.animation.KeyFrame;
 import javafx.animation.Timeline;
 import javafx.application.Platform;
@@ -24,8 +26,8 @@ public class Cross extends Group {
     // statiske variabler
     private static int lengde = 80; // lengden på veiene i krysset
     private static int width = 60; // bredden på veiene i krysset
-    public static long GTI = 3000; // tiden på lyset i millisekunder
-    public static long yT = 2000; // tiden på gult lys
+    public static long GTI = 3500; // tiden på lyset i millisekunder
+    public static long yT = 2500; // tiden på gult lys
 
     private Direction state; // hvilken retning som har grønnt lys
     // farge på lys
@@ -43,6 +45,8 @@ public class Cross extends Group {
     private Lighting grøntlys = new Lighting(greenlight);
     private Lighting rødtlys = new Lighting(redlight);
     private Lighting gultlys = new Lighting(yellowLight);
+    // gult lys, true hvis gult
+    Boolean gult;
     // region som biler ikke stopper i
     private Rectangle noStopZone;
     // region som biler stopper i
@@ -278,6 +282,7 @@ public class Cross extends Group {
 
     /** metode for å sette gult lys */
     private void gult() {
+        gult = true;
         Platform.runLater(() -> {
             switch (state) {
                 case RIGHT:
@@ -330,6 +335,7 @@ public class Cross extends Group {
 
     /** oppdater fargene til lysene på ui tråden */
     private void updateColor() {
+        gult = false;
         Platform.runLater(() -> {
             switch (state) {
                 case RIGHT:
@@ -465,5 +471,9 @@ public class Cross extends Group {
      */
     public Rectangle getTurnZone() {
         return turnZone;
+    }
+
+    public Boolean getGult() {
+        return this.gult;
     }
 }
