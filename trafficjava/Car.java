@@ -58,8 +58,6 @@ class Car extends Rectangle implements Runnable {
     public static final int CAR_WIDTH = 24;
     public static final int CAR_HEIGHT = 50;
 
-    public static int maxSpeed = 3;
-
     private Rectangle shape;
     public Paint color;
 
@@ -324,12 +322,7 @@ class Car extends Rectangle implements Runnable {
             Bounds carBounds = this.shape.localToParent(this.shape.getBoundsInLocal());
             Bounds stopZone = rstopZone.localToParent(rstopZone.getBoundsInLocal());
             Bounds slowZone = rslowZone.localToParent(rslowZone.getBoundsInLocal());
-            if (gult) {
-                System.out.println("gult lys");
-            }
-            if (rødt) {
-                System.out.println("rødt lys");
-            }
+
             if (carBounds.intersects(stopZone) && avstand > 100) {
                 setSpeed(Speed.STOP);
                 // System.out.println(this.color + "bil er i stoppzone");
@@ -342,14 +335,14 @@ class Car extends Rectangle implements Runnable {
         }
         // kollisjonsdeteksjon
         if (frontCar != null) {
-            System.out.println("bil:" + getColor() + "  har bil foran");
+            // System.out.println("bil:" + getColor() + " har bil foran");
             if (avstand <= 60) {
-                System.out.println("avstand: " + avstand);
+                // System.out.println("avstand: " + avstand);
                 setSpeed(Speed.STOP);
                 return;
 
             } else if (avstand <= 80) {
-                System.out.println("avstand: " + avstand);
+                // System.out.println("avstand: " + avstand);
                 setSpeed(Speed.LOW);
                 return;
 
@@ -467,16 +460,6 @@ class Car extends Rectangle implements Runnable {
                     }
                 }))
                 .orElse(null);
-    }
-
-    /**
-     * setter max farten for bilene
-     * 
-     * @param speed int
-     */
-    public static void setMaxSpeed(Integer speed) {
-        Car.maxSpeed = speed;
-
     }
 
     /** oppdaterer bilene på UI-tråden, gjør av vi kan se forflyttelse */

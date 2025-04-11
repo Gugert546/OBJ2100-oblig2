@@ -2,8 +2,6 @@ package trafficjava;
 
 import java.util.Random;
 
-import javax.swing.text.StyledEditorKit.BoldAction;
-
 import javafx.animation.KeyFrame;
 import javafx.animation.Timeline;
 import javafx.application.Platform;
@@ -26,7 +24,7 @@ public class Cross extends Group {
     // statiske variabler
     private static int lengde = 80; // lengden på veiene i krysset
     private static int width = 60; // bredden på veiene i krysset
-    public static long GTI = 3500; // tiden på lyset i millisekunder
+    public long GTI = 3500; // tiden på lyset i millisekunder
     public static long yT = 2500; // tiden på gult lys
 
     private Direction state; // hvilken retning som har grønnt lys
@@ -390,8 +388,8 @@ public class Cross extends Group {
      * 
      * @param tid antall millisekunder
      */
-    public static void setGTI(long tid) {
-        Cross.GTI = tid;
+    public void setGTI(long tid) {
+        this.GTI = tid;
         System.out.println("tid på grønt lys er:" + GTI);
     }
 
@@ -422,7 +420,7 @@ public class Cross extends Group {
      */
     private void startLys() {
         lyslogikk(); // bytt farge på lysene
-        Timeline lightSwitcher = new Timeline(new KeyFrame(Duration.millis(Cross.GTI), event -> startYellowPhase()));
+        Timeline lightSwitcher = new Timeline(new KeyFrame(Duration.millis(this.GTI), event -> startYellowPhase()));
         lightSwitcher.setCycleCount(1);
         lightSwitcher.play();
     }

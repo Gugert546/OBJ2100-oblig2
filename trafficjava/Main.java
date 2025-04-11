@@ -32,6 +32,7 @@ public class Main extends Application {
     private double randomX = 0;
     private double randomY = 0;
     private Car.Direction randomDirection;
+    private Cross chosenIntersection;
     // lanes i nedovergående retning
     public static double laneNedoverVenstre = 98;
     public static double laneNedoverHøyre = 473;
@@ -51,16 +52,18 @@ public class Main extends Application {
     /** start metode, spawner biler og setter stagen */
     public void start(Stage primaryStage) {
         Main.TrafficPane = drawScreen();
+
         Timeline carSpawner = new Timeline(new KeyFrame(Duration.seconds(1), event -> {
-            if (carList.size() >= CAR_COUNT)
+            if (carList.size() >= CAR_COUNT) {
                 return;
-            setTilfeldigSpawn();
+            }
+
+            setTilfeldigSpawn(); // setter randomX, randomY, randomDirection brukes til bilobjektet
             Car car = new Car(randomX, randomY, randomDirection);
-            Main.carList.add(car);
+            carList.add(car);
             TrafficPane.getChildren().add(car.getShape());
             car.toFront();
-            // printer hvor mange biler som ligger i bil-lista (debug)
-            System.out.println(carList.size());
+            System.out.println("Spawned car. Total: " + carList.size());
 
         }));
         carSpawner.setCycleCount(Timeline.INDEFINITE); // fortsetter å spawne hele tiden
@@ -86,6 +89,7 @@ public class Main extends Application {
     }
 
     /** metode for å sette en tilfeldig spawn lokasjon til bilen */
+    // TODO, fjern unødig venstre
     private void setTilfeldigSpawn() {
         Random random = new Random();
         int tall = random.nextInt(9) + 1;
@@ -153,37 +157,27 @@ public class Main extends Application {
         guifelt.setFill(Color.GRAY);
         pane.getChildren().add(guifelt);
         // kanpp for å slette bilene
-        Label sletteTekst = new Label("slett alle bilen");
+        Label sletteTekst = new Label("slett alle bilene");
         Button slettButton = new Button("slett");
         slettButton.setOnAction(e -> {
             // kode for knappen
             deleteAllcars();
         });
         gui.getChildren().addAll(sletteTekst, slettButton);
-        // gui for å velge ønsket fart på bilene
-        Label Ftekst = new Label("ønsket fart på bilene:" + Car.maxSpeed);
-        TextField fart = new TextField();
-        Button Fknapp = new Button("OK");
-        Fknapp.setOnAction(e -> {
-            Integer speed = Integer.parseInt(fart.getText());
-            if (speed > 0) {
-                Car.setMaxSpeed(speed);
-            } else
-                System.out.println("ulovelig verdi for fart");
-        });
-        gui.getChildren().addAll(Ftekst, fart, Fknapp);
 
         // gui for å sette ønsket tid på lysene
-        Label Ttekst = new Label("ønsket tid på grønt lys(millisec):" + Cross.GTI);
+        Label Ttekst = new Label("ønsket tid på grønt lys(millisec):");
         TextField tid = new TextField();
         Button Tknapp = new Button("OK");
         Tknapp.setOnAction(e -> {
-            Integer GTI = Integer.parseInt(tid.getText());
-            if (GTI > 0) {
-                Cross.setGTI(GTI);
+            if (chosenIntersection != null) {
+                Integer GTI = Integer.parseInt(tid.getText());
+                if (GTI > 0) {
+                    chosenIntersection.setGTI(GTI);
+                } else
+                    System.out.println("ulovlig verdi for tid");
             } else
-                System.out.println("ulovlig verdi for tid");
-
+                System.out.println("velg et kryss");
         });
         gui.getChildren().addAll(Ttekst, tid, Tknapp);
 
@@ -202,7 +196,7 @@ public class Main extends Application {
 
         // legger til gui elementer på skjermen
         gui.setLayoutX(610);
-        gui.setLayoutY(200);
+        gui.setLayoutY(165);
         pane.getChildren().addAll(gui);
         gui.toFront();
 
@@ -210,9 +204,29 @@ public class Main extends Application {
 
         // oppbygning av vei system
         Cross c0 = new Cross(125, 150);// øverst til venstre
+        c0.setOnMouseClicked(e -> {
+            this.chosenIntersection = c0;
+            System.out.println("Selected c0");
+
+        });
         Cross c1 = new Cross(125, 450);// nederst til venstre
+        c1.setOnMouseClicked(e -> {
+            this.chosenIntersection = c1;
+            System.out.println("Selected c1");
+
+        });
         Cross c2 = new Cross(500, 150);// øverst til høyre
+        c2.setOnMouseClicked(e -> {
+            this.chosenIntersection = c2;
+            System.out.println("Selected c2");
+
+        });
         Cross c3 = new Cross(500, 450);// nederst til høyre
+        c3.setOnMouseClicked(e -> {
+            this.chosenIntersection = c3;
+            System.out.println("Selected c3");
+
+        });
         crossList.add(c0);
         crossList.add(c1);
         crossList.add(c2);
